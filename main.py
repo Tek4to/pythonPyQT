@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QTableWidgetItem
 from OmGTU import Ui_MainWindow
 from openpyxl import load_workbook
@@ -20,12 +20,16 @@ def all_profiles():
     return data
 
 
-def degree_sort():
-    g = Graph.Read_Pajek("graph.net")
-    my_dict = dict(enumerate(Graph.degree(g)))
-    sorted_tuples = sorted(my_dict.items(), key=lambda item: (item[1]), reverse=True)
+def dict_sort(slovarik):
+    sorted_tuples = sorted(slovarik.items(), key=lambda item: (item[1]), reverse=True)
     sorted_dict = {k + 1: v for k, v in sorted_tuples}
     rows = list(sorted_dict.keys())
+    return rows
+
+
+def degree_sort():
+    g = Graph.Read_Pajek("graph.net")
+    rows = dict_sort(dict(enumerate(Graph.degree(g))))
     wb = load_workbook(filename='Перечень статей.xlsx',
                        data_only=True)  # Загрузка файла и считывание его данных
     ws = wb.active
@@ -40,10 +44,7 @@ def degree_sort():
 
 def closeness_sort():
     g = Graph.Read_Pajek("graph.net")
-    my_dict = dict(enumerate(Graph.closeness(g)))
-    sorted_tuples = sorted(my_dict.items(), key=lambda item: (item[1]), reverse=True)
-    sorted_dict = {k + 1: v for k, v in sorted_tuples}
-    rows = list(sorted_dict.keys())
+    rows = dict_sort(dict(enumerate(Graph.closeness(g))))
     wb = load_workbook(filename='Перечень статей.xlsx',
                        data_only=True)  # Загрузка файла и считывание его данных
     ws = wb.active
@@ -58,10 +59,7 @@ def closeness_sort():
 
 def betweenness_sort():
     g = Graph.Read_Pajek("graph.net")
-    my_dict = dict(enumerate(Graph.betweenness(g)))
-    sorted_tuples = sorted(my_dict.items(), key=lambda item: (item[1]), reverse=True)
-    sorted_dict = {k + 1: v for k, v in sorted_tuples}
-    rows = list(sorted_dict.keys())
+    rows = dict_sort(dict(enumerate(Graph.betweenness(g))))
     wb = load_workbook(filename='Перечень статей.xlsx',
                        data_only=True)  # Загрузка файла и считывание его данных
     ws = wb.active
@@ -76,10 +74,7 @@ def betweenness_sort():
 
 def authority_sort():
     g = Graph.Read_Pajek("graph.net")
-    my_dict = dict(enumerate(Graph.authority_score(g)))
-    sorted_tuples = sorted(my_dict.items(), key=lambda item: (item[1]), reverse=True)
-    sorted_dict = {k + 1: v for k, v in sorted_tuples}
-    rows = list(sorted_dict.keys())
+    rows = dict_sort(dict(enumerate(Graph.authority_score(g))))
     wb = load_workbook(filename='Перечень статей.xlsx',
                        data_only=True)  # Загрузка файла и считывание его данных
     ws = wb.active
@@ -92,13 +87,9 @@ def authority_sort():
     return data
 
 
-
 def hub_sort():
     g = Graph.Read_Pajek("graph.net")
-    my_dict = dict(enumerate(Graph.hub_score(g)))
-    sorted_tuples = sorted(my_dict.items(), key=lambda item: (item[1]), reverse=True)
-    sorted_dict = {k + 1: v for k, v in sorted_tuples}
-    rows = list(sorted_dict.keys())
+    rows = dict_sort(dict(enumerate(Graph.hub_score(g))))
     wb = load_workbook(filename='Перечень статей.xlsx',
                        data_only=True)  # Загрузка файла и считывание его данных
     ws = wb.active
