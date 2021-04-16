@@ -169,6 +169,7 @@ class MyWindow(QtWidgets.QMainWindow):
         if checker == 'По концентрации':
             self.printer(hub_sort())
 
+
 app = QtWidgets.QApplication([])
 application = MyWindow()
 application.show()
