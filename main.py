@@ -1,33 +1,54 @@
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidget, QLineEdit, QPushButton, QApplication, QMainWindow, QVBoxLayout, QWidget,\
+    QTableWidgetItem
+from PyQt5.QtCore import Qt
 from OmGTU import Ui_MainWindow
 from openpyxl import load_workbook
 from igraph import *
 import sys
 
 
-def all_profiles():
+def all_profiles():  # Загрузка всех статей
     wb = load_workbook(filename='Перечень статей.xlsx',
                        data_only=True)  # Загрузка файла и считывание его данных
     ws = wb.active
     row_count = ws.max_row
     column_count = ws.max_column
     data = []
-    # Считывание данных из таблицы в файлк
+    # Считывание данных из таблицы в файле
     for j in range(2, row_count + 1):
         for i in range(1, column_count + 1):
             data.append([ws.cell(row=j, column=i).value])
     return data
 
 
-def dict_sort(slovarik):
+def profile():
+    g = Graph.Read_Pajek("graph.net")
+    slovarik = dict(enumerate(Graph.degree(g)))
+    sorted_tuples = sorted(slovarik.items(), key=lambda item: (item[1]), reverse=True)
+    sorted_dict = {k + 1: v for k, v in sorted_tuples}
+    range_sorted_dict = sorted_dict.copy()
+    i = 1
+    for k in range_sorted_dict.keys():
+        for k2 in range_sorted_dict.values():
+            if k != k2 and range_sorted_dict.get(k2) == range_sorted_dict.get(k2):
+                range_sorted_dict[k] = i
+            else:
+                range_sorted_dict[k] = i
+                i += 1
+
+
+profile()
+
+
+def dict_sort(slovarik):  # Сортировка списка статей по центральности и создание списка отсортированных строк
     sorted_tuples = sorted(slovarik.items(), key=lambda item: (item[1]), reverse=True)
     sorted_dict = {k + 1: v for k, v in sorted_tuples}
     rows = list(sorted_dict.keys())
     return rows
 
 
-def degree_sort():
+def degree_sort():  # Сортировка статьи по центральности и добавление её в таблицу
     g = Graph.Read_Pajek("graph.net")
     rows = dict_sort(dict(enumerate(Graph.degree(g))))
     wb = load_workbook(filename='Перечень статей.xlsx',
@@ -42,7 +63,7 @@ def degree_sort():
     return data
 
 
-def closeness_sort():
+def closeness_sort():  # Сортировка статьи по центральности и добавление её в таблицу
     g = Graph.Read_Pajek("graph.net")
     rows = dict_sort(dict(enumerate(Graph.closeness(g))))
     wb = load_workbook(filename='Перечень статей.xlsx',
@@ -57,7 +78,7 @@ def closeness_sort():
     return data
 
 
-def betweenness_sort():
+def betweenness_sort():  # Сортировка статьи по центральности и добавление её в таблицу
     g = Graph.Read_Pajek("graph.net")
     rows = dict_sort(dict(enumerate(Graph.betweenness(g))))
     wb = load_workbook(filename='Перечень статей.xlsx',
@@ -72,7 +93,7 @@ def betweenness_sort():
     return data
 
 
-def authority_sort():
+def authority_sort():  # Сортировка статьи по центральности и добавление её в таблицу
     g = Graph.Read_Pajek("graph.net")
     rows = dict_sort(dict(enumerate(Graph.authority_score(g))))
     wb = load_workbook(filename='Перечень статей.xlsx',
@@ -87,7 +108,7 @@ def authority_sort():
     return data
 
 
-def hub_sort():
+def hub_sort():  # Сортировка статьи по центральности и добавление её в таблицу
     g = Graph.Read_Pajek("graph.net")
     rows = dict_sort(dict(enumerate(Graph.hub_score(g))))
     wb = load_workbook(filename='Перечень статей.xlsx',
@@ -107,7 +128,6 @@ class MyWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
         self.ui.comboBox.addItem('Все профили')  # Добавление названий профилей в выдвигающийся список
         self.ui.comboBox.addItem('По степени связанности')
         self.ui.comboBox.addItem('По близости')
@@ -117,13 +137,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.comboBox.addItem('Реферативность')
         self.ui.comboBox.addItem('Признанность')
         self.ui.comboBox.addItem('Весомость')
-
-        self.ui.label1.setFont(
-            QtGui.QFont('TimesNewRoman', 14))  # Шрифт и его размер в названии
-
+        self.ui.lineEdit.setPlaceholderText("Поиск по ключевым словам...")
+        self.ui.pushButton.clicked.connect(self.search)
         self.ui.pushButton_3.clicked.connect(self.renew)  # Фильтрация таблицы по профилю
+        self.printer(all_profiles())
 
-    def printer(self, mylist):
+    def printer(self, mylist):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
         wb = load_workbook(filename='Перечень статей.xlsx', data_only=True)  # Загрузка файла и считывание его данных
         ws = wb.active
         row_count = ws.max_row
@@ -134,10 +153,8 @@ class MyWindow(QtWidgets.QMainWindow):
              'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка')
         )
         self.ui.tableWidget.setRowCount(row_count)
-
         row = 0
         col = 0
-
         # Заполнение таблицы в приложении
         for tup in mylist:
             for item in tup:
@@ -145,7 +162,16 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.ui.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
                 col += 1
 
-    def renew(self):
+    def search(self):
+        s = self.ui.lineEdit.text()
+        data = []
+        # Считывание данных из таблицы в файле
+        for j in range(self.ui.tableWidget.rowCount()):
+            for i in range(self.ui.tableWidget.columnCount()):
+                data.append(self.ui.tableWidget.item(j, i).text())
+        print(data)
+
+    def renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox.currentText())
         if checker == 'Все профили':
             self.printer(all_profiles())
@@ -161,7 +187,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.printer(hub_sort())
 
 
-app = QtWidgets.QApplication([])
+app = QApplication(sys.argv)
 application = MyWindow()
 application.show()
 sys.exit(app.exec())
