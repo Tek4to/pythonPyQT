@@ -1,7 +1,5 @@
-from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QTableWidget, QLineEdit, QPushButton, QApplication, QMainWindow, QVBoxLayout, QWidget,\
-    QTableWidgetItem
-from PyQt5.QtCore import Qt
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication, QTableWidgetItem
 from OmGTU import Ui_MainWindow
 from openpyxl import load_workbook
 from igraph import *
@@ -22,30 +20,76 @@ def all_profiles():  # Загрузка всех статей
     return data
 
 
-def profile():
-    g = Graph.Read_Pajek("graph.net")
-    slovarik = dict(enumerate(Graph.degree(g)))
-    sorted_tuples = sorted(slovarik.items(), key=lambda item: (item[1]), reverse=True)
-    sorted_dict = {k + 1: v for k, v in sorted_tuples}
-    range_sorted_dict = sorted_dict.copy()
-    i = 1
-    for k in range_sorted_dict.keys():
-        for k2 in range_sorted_dict.values():
-            if k != k2 and range_sorted_dict.get(k2) == range_sorted_dict.get(k2):
-                range_sorted_dict[k] = i
-            else:
-                range_sorted_dict[k] = i
-                i += 1
-
-
-profile()
-
-
 def dict_sort(slovarik):  # Сортировка списка статей по центральности и создание списка отсортированных строк
     sorted_tuples = sorted(slovarik.items(), key=lambda item: (item[1]), reverse=True)
     sorted_dict = {k + 1: v for k, v in sorted_tuples}
     rows = list(sorted_dict.keys())
     return rows
+
+
+def dict_sum(slovarik0, slovarik1):
+    final_slov = slovarik0.copy()
+    for k, v in slovarik1.items():
+        final_slov[k] = final_slov.get(k, 0) + v
+    return final_slov
+
+
+def range_sort(slovarik):
+    sorted_tuples = sorted(slovarik.items(), key=lambda item: (item[1]), reverse=True)
+    sorted_dict = {k + 1: v for k, v in sorted_tuples}
+    range_sorted_dict = {}
+    out = {}
+    i = 1
+    for k, v in sorted_dict.items():
+        out.setdefault(v, []).append(k)
+    for k, v in out.items():
+        for vv in v:
+            range_sorted_dict[vv] = i
+        i += 1
+    return range_sorted_dict
+
+
+def profile_range_sort(sorted_dict):
+    range_sorted_dict = {}
+    out = {}
+    i = 1
+    for k, v in sorted_dict.items():
+        out.setdefault(v, []).append(k)
+    for k, v in out.items():
+        for vv in v:
+            range_sorted_dict[vv] = i
+        i += 1
+    return range_sorted_dict
+
+
+def profile_dict_sort(slovarik):  # Сортировка списка статей по центральности и создание списка отсортированных строк
+    sorted_dict = {}
+    sorted_keys = sorted(slovarik, key=slovarik.get)  # [1, 3, 2]
+
+    for w in sorted_keys:
+        sorted_dict[w] = slovarik[w]
+    return sorted_dict
+
+
+def vesomost():
+    g = Graph.Read_Pajek("graph.net")
+    wb = load_workbook(filename='Перечень статей.xlsx',
+                       data_only=True)
+    ws = wb.active
+    column_count = ws.max_column
+    data = []
+    degree = range_sort(dict(enumerate(Graph.degree(g))))
+    closeness = range_sort(dict(enumerate(Graph.closeness(g))))
+    betweenness = range_sort(dict(enumerate(Graph.betweenness(g))))
+    authority = range_sort(dict(enumerate(Graph.authority_score(g))))
+    hub = range_sort(dict(enumerate(Graph.hub_score(g))))
+    profiles = profile_dict_sort(dict_sum(dict_sum(dict_sum(dict_sum(degree, closeness), betweenness), authority), hub))
+    sorted_profiles = profile_range_sort(profiles)
+    rows = list(sorted_profiles.keys())
+    for j in rows:
+        for i in range(1, column_count + 1):
+            data.append([ws.cell(row=j+1, column=i).value])
+    return data
 
 
 def degree_sort():  # Сортировка статьи по центральности и добавление её в таблицу
@@ -137,6 +181,10 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.comboBox.addItem('Реферативность')
         self.ui.comboBox.addItem('Признанность')
         self.ui.comboBox.addItem('Весомость')
+        self.ui.comboBox_2.addItem('Ключевое слово')
+        self.ui.comboBox_2.addItem('Тема')
+        self.ui.comboBox_2.addItem('Автор')
+        self.ui.comboBox_2.addItem('УДК')
         self.ui.lineEdit.setPlaceholderText("Поиск по ключевым словам...")
         self.ui.pushButton.clicked.connect(self.search)
         self.ui.pushButton_3.clicked.connect(self.renew)  # Фильтрация таблицы по профилю
@@ -185,6 +233,11 @@ class MyWindow(QtWidgets.QMainWindow):
             self.printer(authority_sort())
         if checker == 'По концентрации':
             self.printer(hub_sort())
+        if checker == 'Весомость':
+            self.printer(vesomost())
+        # if checker == 'Реферативность':
+
+        # if checker =='Признанность':
 
 
 app = QApplication(sys.argv)
