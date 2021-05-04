@@ -6,32 +6,11 @@ from igraph import *
 import sys
 
 
-def all_profiles():  # Загрузка всех статей
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)  # Загрузка файла и считывание его данных
-    ws = wb.active
-    row_count = ws.max_row
-    column_count = ws.max_column
-    data = []
-    # Считывание данных из таблицы в файле
-    for j in range(2, row_count + 1):
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j, column=i).value])
-    return data
-
-
 def dict_sort(slovarik):  # Сортировка списка статей по центральности и создание списка отсортированных строк
     sorted_tuples = sorted(slovarik.items(), key=lambda item: (item[1]), reverse=True)
     sorted_dict = {k + 1: v for k, v in sorted_tuples}
     rows = list(sorted_dict.keys())
     return rows
-
-
-def dict_sum(slovarik0, slovarik1):
-    final_slov = slovarik0.copy()
-    for k, v in slovarik1.items():
-        final_slov[k] = final_slov.get(k, 0) + v
-    return final_slov
 
 
 def range_sort(slovarik):
@@ -71,62 +50,24 @@ def profile_dict_sort(slovarik):  # Сортировка списка стате
     return sorted_dict
 
 
-def referativ():
-    g = Graph.Read_Pajek("graph.net")
+def dict_sum(slovarik0, slovarik1):
+    final_slov = slovarik0.copy()
+    for k, v in slovarik1.items():
+        final_slov[k] = final_slov.get(k, 0) + v
+    return final_slov
+
+
+def all_profiles():  # Загрузка всех статей
     wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)
+                       data_only=True)  # Загрузка файла и считывание его данных
     ws = wb.active
+    row_count = ws.max_row
     column_count = ws.max_column
     data = []
-    degree = range_sort(dict(enumerate(Graph.degree(g, mode='out'))))
-    closeness = range_sort(dict(enumerate(Graph.closeness(g, mode='out'))))
-    hub = range_sort(dict(enumerate(Graph.hub_score(g))))
-    profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), hub))
-    sorted_profiles = profile_range_sort(profiles)
-    rows = list(sorted_profiles.keys())
-    for j in rows:
+    # Считывание данных из таблицы в файле
+    for j in range(2, row_count + 1):
         for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j + 1, column=i).value])
-    return data
-
-
-def priznan():
-    g = Graph.Read_Pajek("graph.net")
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)
-    ws = wb.active
-    column_count = ws.max_column
-    data = []
-    degree = range_sort(dict(enumerate(Graph.degree(g, mode='in'))))
-    closeness = range_sort(dict(enumerate(Graph.closeness(g, mode='in'))))
-    authority = range_sort(dict(enumerate(Graph.authority_score(g))))
-    profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), authority))
-    sorted_profiles = profile_range_sort(profiles)
-    rows = list(sorted_profiles.keys())
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j + 1, column=i).value])
-    return data
-
-
-def vesomost():
-    g = Graph.Read_Pajek("graph.net")
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)
-    ws = wb.active
-    column_count = ws.max_column
-    data = []
-    degree = range_sort(dict(enumerate(Graph.degree(g))))
-    closeness = range_sort(dict(enumerate(Graph.closeness(g))))
-    betweenness = range_sort(dict(enumerate(Graph.betweenness(g))))
-    authority = range_sort(dict(enumerate(Graph.authority_score(g))))
-    hub = range_sort(dict(enumerate(Graph.hub_score(g))))
-    profiles = profile_dict_sort(dict_sum(dict_sum(dict_sum(dict_sum(degree, closeness), betweenness), authority), hub))
-    sorted_profiles = profile_range_sort(profiles)
-    rows = list(sorted_profiles.keys())
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j+1, column=i).value])
+            data.append([ws.cell(row=j, column=i).value])
     return data
 
 
@@ -205,6 +146,65 @@ def hub_sort():  # Сортировка статьи по центральнос
     return data
 
 
+def referativ():
+    g = Graph.Read_Pajek("graph.net")
+    wb = load_workbook(filename='Перечень статей.xlsx',
+                       data_only=True)
+    ws = wb.active
+    column_count = ws.max_column
+    data = []
+    degree = range_sort(dict(enumerate(Graph.degree(g, mode='out'))))
+    closeness = range_sort(dict(enumerate(Graph.closeness(g, mode='out'))))
+    hub = range_sort(dict(enumerate(Graph.hub_score(g))))
+    profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), hub))
+    sorted_profiles = profile_range_sort(profiles)
+    rows = list(sorted_profiles.keys())
+    for j in rows:
+        for i in range(1, column_count + 1):
+            data.append([ws.cell(row=j + 1, column=i).value])
+    return data
+
+
+def priznan():
+    g = Graph.Read_Pajek("graph.net")
+    wb = load_workbook(filename='Перечень статей.xlsx',
+                       data_only=True)
+    ws = wb.active
+    column_count = ws.max_column
+    data = []
+    degree = range_sort(dict(enumerate(Graph.degree(g, mode='in'))))
+    closeness = range_sort(dict(enumerate(Graph.closeness(g, mode='in'))))
+    authority = range_sort(dict(enumerate(Graph.authority_score(g))))
+    profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), authority))
+    sorted_profiles = profile_range_sort(profiles)
+    rows = list(sorted_profiles.keys())
+    for j in rows:
+        for i in range(1, column_count + 1):
+            data.append([ws.cell(row=j + 1, column=i).value])
+    return data
+
+
+def vesomost():
+    g = Graph.Read_Pajek("graph.net")
+    wb = load_workbook(filename='Перечень статей.xlsx',
+                       data_only=True)
+    ws = wb.active
+    column_count = ws.max_column
+    data = []
+    degree = range_sort(dict(enumerate(Graph.degree(g))))
+    closeness = range_sort(dict(enumerate(Graph.closeness(g))))
+    betweenness = range_sort(dict(enumerate(Graph.betweenness(g))))
+    authority = range_sort(dict(enumerate(Graph.authority_score(g))))
+    hub = range_sort(dict(enumerate(Graph.hub_score(g))))
+    profiles = profile_dict_sort(dict_sum(dict_sum(dict_sum(dict_sum(degree, closeness), betweenness), authority), hub))
+    sorted_profiles = profile_range_sort(profiles)
+    rows = list(sorted_profiles.keys())
+    for j in rows:
+        for i in range(1, column_count + 1):
+            data.append([ws.cell(row=j+1, column=i).value])
+    return data
+
+
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -275,7 +275,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.printer(vesomost())
         if checker == 'Реферативность':
             self.printer(referativ())
-        if checker =='Признанность':
+        if checker == 'Признанность':
             self.printer(priznan())
 
 
