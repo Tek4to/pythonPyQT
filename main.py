@@ -65,11 +65,13 @@ def all_profiles():  # Загрузка всех статей
     row_count = ws.max_row
     column_count = ws.max_column
     data = []
+    ranks = []
     # Считывание данных из таблицы в файле
     for j in range(2, row_count + 1):
         for i in range(1, column_count + 1):
             data.append([ws.cell(row=j, column=i).value])
-    return data
+            ranks.append(0)
+    return data, ranks
 
 
 def degree_sort():  # Сортировка статьи по центральности и добавление её в таблицу
@@ -158,12 +160,13 @@ def referativ():
     closeness = range_sort(dict(enumerate(Graph.closeness(g, mode='out'))))
     hub = range_sort(dict(enumerate(Graph.hub_score(g))))
     profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), hub))
-    sorted_profiles = profile_range_sort(profiles)
+    sorted_profiles = profile_range_sort(profiles)  # Ключ - номер статьи, значение - ранг
     rows = list(sorted_profiles.keys())
+    ranks = list(sorted_profiles.values())
     for j in rows:
         for i in range(1, column_count + 1):
             data.append([ws.cell(row=j + 1, column=i).value])
-    return data
+    return data, ranks
 
 
 def priznan():
@@ -179,10 +182,11 @@ def priznan():
     profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), authority))
     sorted_profiles = profile_range_sort(profiles)
     rows = list(sorted_profiles.keys())
+    ranks = list(sorted_profiles.values())
     for j in rows:
         for i in range(1, column_count + 1):
             data.append([ws.cell(row=j + 1, column=i).value])
-    return data
+    return data, ranks
 
 
 def vesomost():
@@ -200,10 +204,11 @@ def vesomost():
     profiles = profile_dict_sort(dict_sum(dict_sum(dict_sum(dict_sum(degree, closeness), betweenness), authority), hub))
     sorted_profiles = profile_range_sort(profiles)
     rows = list(sorted_profiles.keys())
+    ranks = list(sorted_profiles.values())
     for j in rows:
         for i in range(1, column_count + 1):
             data.append([ws.cell(row=j+1, column=i).value])
-    return data
+    return data, ranks
 
 
 class MyWindow(QtWidgets.QMainWindow):
@@ -227,7 +232,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.lineEdit.setPlaceholderText("Поиск по ключевым словам...")
         self.ui.pushButton.clicked.connect(self.search)
         self.ui.pushButton_3.clicked.connect(self.renew)  # Фильтрация таблицы по профилю
-        self.printer(all_profiles())
+        mylist, ranks = all_profiles()
+        self.printer(mylist, ranks)
 
     def search(self):
         data = []
@@ -240,16 +246,16 @@ class MyWindow(QtWidgets.QMainWindow):
         for item in items:
             if item and item.column() == self.search_renew():
                     i = item.row()
-                    for j in range(0, 10):
+                    for j in range(0, 11):
                         data.append(self.ui.tableWidget.item(i, j).text())
                     rows_count += 1
         if data:
             #  Очистка таблицы и вывод только искомых данных
             self.ui.tableWidget.clear()
-            self.ui.tableWidget.setColumnCount(10)  # Задача кол-ва столбцов и строк
+            self.ui.tableWidget.setColumnCount(11)  # Задача кол-ва столбцов и строк
             self.ui.tableWidget.setHorizontalHeaderLabels(
                 ('№ статьи', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
-                 'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка')
+                 'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка', 'Ранг')
             )
             self.ui.tableWidget.setRowCount(rows_count)
             for item in data:
@@ -264,16 +270,15 @@ class MyWindow(QtWidgets.QMainWindow):
             )
             self.ui.tableWidget.setRowCount(0)
 
-    def printer(self, mylist):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
+    def printer(self, mylist, ranks):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
         wb = load_workbook(filename='Перечень статей.xlsx', data_only=True)  # Загрузка файла и считывание его данных
         ws = wb.active
         row_count = ws.max_row
         column_count = ws.max_column
+        column_names =['№ статьи', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
+             'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
         self.ui.tableWidget.setColumnCount(column_count)  # Задача кол-ва столбцов и строк
-        self.ui.tableWidget.setHorizontalHeaderLabels(
-            ('№ статьи', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
-             'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка')
-        )
+        self.ui.tableWidget.setHorizontalHeaderLabels(column_names)
         self.ui.tableWidget.setRowCount(row_count)
         row = 0
         col = 0
@@ -283,6 +288,14 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
                 self.ui.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
                 col += 1
+        colPosition = self.ui.tableWidget.columnCount()
+        self.ui.tableWidget.insertColumn(colPosition)
+        column_names.append('Ранг')
+        self.ui.tableWidget.setHorizontalHeaderLabels(column_names)
+        for item in ranks:
+            self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+            self.ui.tableWidget.setItem(row, colPosition, QTableWidgetItem(str(item)))
+            row += 1
 
     def search_renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox_2.currentText())
@@ -296,7 +309,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox.currentText())
-        if checker == 'Все профили':
+        if checker == 'Все статьи':
             self.printer(all_profiles())
         if checker == 'По степени связанности':
             self.printer(degree_sort())
@@ -309,11 +322,14 @@ class MyWindow(QtWidgets.QMainWindow):
         if checker == 'По концентрации':
             self.printer(hub_sort())
         if checker == 'Весомость':
-            self.printer(vesomost())
+            mylist, ranks = vesomost()
+            self.printer(mylist, ranks)
         if checker == 'Реферативность':
-            self.printer(referativ())
+            mylist, ranks = referativ()
+            self.printer(mylist, ranks)
         if checker == 'Признанность':
-            self.printer(priznan())
+            mylist, ranks = priznan()
+            self.printer(mylist, ranks)
 
 
 app = QApplication(sys.argv)
