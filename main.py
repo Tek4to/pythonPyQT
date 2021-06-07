@@ -1,5 +1,6 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QTableWidgetItem
+
 from OmGTU import Ui_MainWindow
 from openpyxl import load_workbook
 from igraph import *
@@ -210,12 +211,12 @@ class MyWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.comboBox.addItem('Все профили')  # Добавление названий профилей в выдвигающийся список
-        self.ui.comboBox.addItem('По степени связанности')
-        self.ui.comboBox.addItem('По близости')
-        self.ui.comboBox.addItem('По посредничеству')
-        self.ui.comboBox.addItem('По авторитетности')
-        self.ui.comboBox.addItem('По концентрации')
+        self.ui.comboBox.addItem('Все статьи')  # Добавление названий профилей в выдвигающийся список
+        #  self.ui.comboBox.addItem('По степени связанности')
+        #  self.ui.comboBox.addItem('По близости')
+        #  self.ui.comboBox.addItem('По посредничеству')
+        #  self.ui.comboBox.addItem('По авторитетности')
+        #  self.ui.comboBox.addItem('По концентрации')
         self.ui.comboBox.addItem('Реферативность')
         self.ui.comboBox.addItem('Признанность')
         self.ui.comboBox.addItem('Весомость')
@@ -227,6 +228,41 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.pushButton.clicked.connect(self.search)
         self.ui.pushButton_3.clicked.connect(self.renew)  # Фильтрация таблицы по профилю
         self.printer(all_profiles())
+
+    def search(self):
+        data = []
+        row = 0
+        col = 0
+        rows_count = 0
+        text = self.ui.lineEdit.text()  # Считывание текста введённого пользователем
+        items = self.ui.tableWidget.findItems(text, QtCore.Qt.MatchContains)  # Поиск совпадений
+        #  Добавление их в список
+        for item in items:
+            if item and item.column() == self.search_renew():
+                    i = item.row()
+                    for j in range(0, 10):
+                        data.append(self.ui.tableWidget.item(i, j).text())
+                    rows_count += 1
+        if data:
+            #  Очистка таблицы и вывод только искомых данных
+            self.ui.tableWidget.clear()
+            self.ui.tableWidget.setColumnCount(10)  # Задача кол-ва столбцов и строк
+            self.ui.tableWidget.setHorizontalHeaderLabels(
+                ('№ статьи', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
+                 'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка')
+            )
+            self.ui.tableWidget.setRowCount(rows_count)
+            for item in data:
+                self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+                self.ui.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
+                col += 1
+        else:
+            self.ui.tableWidget.clear()
+            self.ui.tableWidget.setColumnCount(3)  # Задача кол-ва столбцов и строк
+            self.ui.tableWidget.setHorizontalHeaderLabels(
+                ('Ничего', 'Не', 'Найдено')
+            )
+            self.ui.tableWidget.setRowCount(0)
 
     def printer(self, mylist):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
         wb = load_workbook(filename='Перечень статей.xlsx', data_only=True)  # Загрузка файла и считывание его данных
@@ -248,14 +284,15 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.ui.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
                 col += 1
 
-    def search(self):
-        s = self.ui.lineEdit.text()
-        data = []
-        # Считывание данных из таблицы в файле
-        for j in range(self.ui.tableWidget.rowCount()):
-            for i in range(self.ui.tableWidget.columnCount()):
-                data.append(self.ui.tableWidget.item(j, i).text())
-        print(data)
+    def search_renew(self):  # Выбор сортировки
+        checker = str(self.ui.comboBox_2.currentText())
+        if checker == 'Ключевое слово':
+            x = 4
+        if checker == 'Автор':
+            x = 2
+        if checker == 'УДК':
+            x = 3
+        return x
 
     def renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox.currentText())
