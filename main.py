@@ -254,8 +254,8 @@ class MyWindow(QtWidgets.QMainWindow):
             self.ui.tableWidget.clear()
             self.ui.tableWidget.setColumnCount(11)  # Задача кол-ва столбцов и строк
             self.ui.tableWidget.setHorizontalHeaderLabels(
-                ('№ статьи', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
-                 'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка', 'Ранг')
+                ('№ строки', 'Ранг', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
+                 'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка')
             )
             self.ui.tableWidget.setRowCount(rows_count)
             for item in data:
@@ -275,7 +275,7 @@ class MyWindow(QtWidgets.QMainWindow):
         ws = wb.active
         row_count = ws.max_row
         column_count = ws.max_column
-        column_names =['№ статьи', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
+        column_names =['№ строки', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
              'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
         self.ui.tableWidget.setColumnCount(column_count)  # Задача кол-ва столбцов и строк
         self.ui.tableWidget.setHorizontalHeaderLabels(column_names)
@@ -288,9 +288,9 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
                 self.ui.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
                 col += 1
-        colPosition = self.ui.tableWidget.columnCount()
+        colPosition = 1
         self.ui.tableWidget.insertColumn(colPosition)
-        column_names.append('Ранг')
+        column_names.insert(1, 'Ранг')
         self.ui.tableWidget.setHorizontalHeaderLabels(column_names)
         for item in ranks:
             self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
@@ -300,17 +300,18 @@ class MyWindow(QtWidgets.QMainWindow):
     def search_renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox_2.currentText())
         if checker == 'Ключевое слово':
-            x = 4
+            x = 5
         if checker == 'Автор':
-            x = 2
-        if checker == 'УДК':
             x = 3
+        if checker == 'УДК':
+            x = 4
         return x
 
     def renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox.currentText())
         if checker == 'Все статьи':
-            self.printer(all_profiles())
+            mylist, ranks = all_profiles()
+            self.printer(mylist, ranks)
         if checker == 'По степени связанности':
             self.printer(degree_sort())
         if checker == 'По близости':
