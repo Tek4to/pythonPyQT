@@ -226,7 +226,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.comboBox.addItem('Признанность')
         self.ui.comboBox.addItem('Весомость')
         self.ui.comboBox_2.addItem('Ключевое слово')
-        self.ui.comboBox_2.addItem('Тема')
+        self.ui.comboBox_2.addItem('Название')
         self.ui.comboBox_2.addItem('Автор')
         self.ui.comboBox_2.addItem('УДК')
         self.ui.lineEdit.setPlaceholderText("Поиск по ключевым словам...")
@@ -305,6 +305,8 @@ class MyWindow(QtWidgets.QMainWindow):
             x = 3
         if checker == 'УДК':
             x = 4
+        if checker == 'Название':
+            x = 2
         return x
 
     def renew(self):  # Выбор сортировки
