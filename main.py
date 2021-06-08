@@ -1,3 +1,4 @@
+import openpyxl
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QTableWidgetItem
 
@@ -232,43 +233,9 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.lineEdit.setPlaceholderText("Поиск по ключевым словам...")
         self.ui.pushButton.clicked.connect(self.search)
         self.ui.pushButton_3.clicked.connect(self.renew)  # Фильтрация таблицы по профилю
+        self.ui.action_excel.triggered.connect(self.excel_save)
         mylist, ranks = all_profiles()
         self.printer(mylist, ranks)
-
-    def search(self):
-        data = []
-        row = 0
-        col = 0
-        rows_count = 0
-        text = self.ui.lineEdit.text()  # Считывание текста введённого пользователем
-        items = self.ui.tableWidget.findItems(text, QtCore.Qt.MatchContains)  # Поиск совпадений
-        #  Добавление их в список
-        for item in items:
-            if item and item.column() == self.search_renew():
-                    i = item.row()
-                    for j in range(0, 11):
-                        data.append(self.ui.tableWidget.item(i, j).text())
-                    rows_count += 1
-        if data:
-            #  Очистка таблицы и вывод только искомых данных
-            self.ui.tableWidget.clear()
-            self.ui.tableWidget.setColumnCount(11)  # Задача кол-ва столбцов и строк
-            self.ui.tableWidget.setHorizontalHeaderLabels(
-                ('№ строки', 'Ранг', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
-                 'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка')
-            )
-            self.ui.tableWidget.setRowCount(rows_count)
-            for item in data:
-                self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
-                self.ui.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
-                col += 1
-        else:
-            self.ui.tableWidget.clear()
-            self.ui.tableWidget.setColumnCount(3)  # Задача кол-ва столбцов и строк
-            self.ui.tableWidget.setHorizontalHeaderLabels(
-                ('Ничего', 'Не', 'Найдено')
-            )
-            self.ui.tableWidget.setRowCount(0)
 
     def printer(self, mylist, ranks):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
         wb = load_workbook(filename='Перечень статей.xlsx', data_only=True)  # Загрузка файла и считывание его данных
@@ -296,6 +263,41 @@ class MyWindow(QtWidgets.QMainWindow):
             self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
             self.ui.tableWidget.setItem(row, colPosition, QTableWidgetItem(str(item)))
             row += 1
+
+    def search(self):
+        data = []
+        row = 0
+        col = 0
+        rows_count = 0
+        text = self.ui.lineEdit.text()  # Считывание текста введённого пользователем
+        items = self.ui.tableWidget.findItems(text, QtCore.Qt.MatchContains)  # Поиск совпадений
+        #  Добавление их в список
+        for item in items:
+            if item and item.column() == self.search_renew():
+                    i = item.row()
+                    for j in range(0, 11):
+                        data.append(self.ui.tableWidget.item(i, j).text())
+                    rows_count += 1  # запомнить количество найденных строк, для их вывода
+        if data:
+            #  Очистка таблицы и вывод только искомых данных
+            self.ui.tableWidget.clear()
+            self.ui.tableWidget.setColumnCount(11)  # Задача кол-ва столбцов и строк
+            self.ui.tableWidget.setHorizontalHeaderLabels(
+                ('№ строки', 'Ранг', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
+                 'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка')
+            )
+            self.ui.tableWidget.setRowCount(rows_count)
+            for item in data:
+                self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+                self.ui.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
+                col += 1
+        else:
+            self.ui.tableWidget.clear()
+            self.ui.tableWidget.setColumnCount(3)  # Задача кол-ва столбцов и строк
+            self.ui.tableWidget.setHorizontalHeaderLabels(
+                ('Ничего', 'Не', 'Найдено')
+            )
+            self.ui.tableWidget.setRowCount(0)
 
     def search_renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox_2.currentText())
@@ -333,6 +335,26 @@ class MyWindow(QtWidgets.QMainWindow):
         if checker == 'Признанность':
             mylist, ranks = priznan()
             self.printer(mylist, ranks)
+
+    def excel_save(self):
+        data = []
+        row = 0
+        column = 0
+        rows_count = self.ui.tableWidget.rowCount()
+        columns_count = self.ui.tableWidget.columnCount()
+        wb = load_workbook(filename='Перечень статей.xlsx',
+                           data_only=True)
+        wb.create_sheet('Ваша выборка')
+        ws = wb['Ваша выборка']
+        for i in range(rows_count):
+            for j in range(columns_count):
+                data.append(self.ui.tableWidget.item(i, j).text())
+        for tup in data:
+            for item in tup:
+                ws.write(row, column, item)
+                column += 1
+            row += 1
+        wb.save('Перечень статей.xlsx')
 
 
 app = QApplication(sys.argv)
