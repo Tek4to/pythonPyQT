@@ -336,25 +336,24 @@ class MyWindow(QtWidgets.QMainWindow):
             mylist, ranks = priznan()
             self.printer(mylist, ranks)
 
+    def get_rows(self):
+        rows_cnt = self.ui.tableWidget.rowCount()
+        colums_cnt = self.ui.tableWidget.columnCount()
+        data = [[] for _ in range(rows_cnt)]
+        for i in range(rows_cnt):
+            for j in range(colums_cnt):
+                if i > 0:
+                    data.append([])
+                data[i].append(self.ui.tableWidget.item(i, j).text())
+        return data
+
     def excel_save(self):
-        data = []
-        row = 0
-        column = 0
-        rows_count = self.ui.tableWidget.rowCount()
-        columns_count = self.ui.tableWidget.columnCount()
-        wb = load_workbook(filename='Перечень статей.xlsx',
-                           data_only=True)
-        wb.create_sheet('Ваша выборка')
-        ws = wb['Ваша выборка']
-        for i in range(rows_count):
-            for j in range(columns_count):
-                data.append(self.ui.tableWidget.item(i, j).text())
-        for tup in data:
-            for item in tup:
-                ws.write(row, column, item)
-                column += 1
-            row += 1
-        wb.save('Перечень статей.xlsx')
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        data = self.get_rows()
+        for list in data:
+            ws.append(list)
+        wb.save('C:/Users/Tekato/Documents/Ваша выборка.xlsx')
 
 
 app = QApplication(sys.argv)
