@@ -1,3 +1,4 @@
+import itertools
 import openpyxl
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QTableWidgetItem
@@ -349,13 +350,23 @@ class MyWindow(QtWidgets.QMainWindow):
         return rows
 
     def excel_save(self):
+        basename = os.environ['USERPROFILE'] + '\Desktop' + '\Ваша выборка статей'
+        ext = 'xlsx'
+        actualname = "%s.%s" % (basename, ext)
+        c = itertools.count(1, 1)
+
         wb = openpyxl.Workbook()
         ws = wb.active
         rows = self.get_rows()
-        filepath = os.environ['USERPROFILE'] + '\Desktop' + '\Ваша выборка статей.xlsx'
+
+        check_file = os.path.exists(actualname)
         for row in rows:
             ws.append(row)
-        wb.save(filepath)
+        if not check_file:
+            wb.save(actualname)
+        else:
+            actualname = "%s (%d).%s" % (basename, next(c), ext)
+            wb.save(actualname)
 
 
 app = QApplication(sys.argv)
