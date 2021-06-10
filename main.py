@@ -1,13 +1,12 @@
 import itertools
 import openpyxl
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QApplication, QTableWidgetItem
-import os
-
+from PyQt5.QtWidgets import QApplication, QTableWidgetItem, QMessageBox
 from OmGTU import Ui_MainWindow
 from openpyxl import load_workbook
 from igraph import *
 import sys
+import os
 
 
 def dict_sort(slovarik):  # Сортировка списка статей по центральности и создание списка отсортированных строк
@@ -350,23 +349,29 @@ class MyWindow(QtWidgets.QMainWindow):
         return rows
 
     def excel_save(self):
-        basename = os.environ['USERPROFILE'] + '\Desktop' + '\Ваша выборка статей'
+        counter = 0
+        filename = '\Ваша выборка статей'
+        basename = os.environ['USERPROFILE'] + '\Desktop' + filename
         ext = 'xlsx'
         actualname = "%s.%s" % (basename, ext)
-        c = itertools.count(1, 1)
-
+        c = itertools.count(1)
         wb = openpyxl.Workbook()
         ws = wb.active
+        ws.title = 'Выбранные статьи'
         rows = self.get_rows()
-
         check_file = os.path.exists(actualname)
         for row in rows:
             ws.append(row)
-        if not check_file:
+        if check_file:
+            counter += 1
+            actualname = "%s (%d).%s" % (basename, counter, ext)
             wb.save(actualname)
+            filename = filename.replace('\\', '') + ' (' + str(counter) + ').' + ext
         else:
-            actualname = "%s (%d).%s" % (basename, next(c), ext)
             wb.save(actualname)
+            filename = filename.replace('\\', '')
+        QMessageBox.about(self, 'Где мой файл?', 'Ваш файл на рабочем столе\n'
+                          + 'Имя файла: ' + filename)
 
 
 app = QApplication(sys.argv)
