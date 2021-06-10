@@ -1,6 +1,7 @@
 import openpyxl
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QTableWidgetItem
+import os
 
 from OmGTU import Ui_MainWindow
 from openpyxl import load_workbook
@@ -282,10 +283,9 @@ class MyWindow(QtWidgets.QMainWindow):
             #  Очистка таблицы и вывод только искомых данных
             self.ui.tableWidget.clear()
             self.ui.tableWidget.setColumnCount(11)  # Задача кол-ва столбцов и строк
-            self.ui.tableWidget.setHorizontalHeaderLabels(
-                ('№ строки', 'Ранг', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
-                 'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка')
-            )
+            columns_headers = ['№ строки', 'Ранг', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
+                 'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
+            self.ui.tableWidget.setHorizontalHeaderLabels(columns_headers)
             self.ui.tableWidget.setRowCount(rows_count)
             for item in data:
                 self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
@@ -337,23 +337,25 @@ class MyWindow(QtWidgets.QMainWindow):
             self.printer(mylist, ranks)
 
     def get_rows(self):
+        columns_headers = ['№ строки', 'Ранг', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
+                           'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
         rows_cnt = self.ui.tableWidget.rowCount()
         colums_cnt = self.ui.tableWidget.columnCount()
-        data = [[] for _ in range(rows_cnt)]
+        rows = [[] for _ in range(rows_cnt)]
         for i in range(rows_cnt):
             for j in range(colums_cnt):
-                if i > 0:
-                    data.append([])
-                data[i].append(self.ui.tableWidget.item(i, j).text())
-        return data
+                rows[i].append(self.ui.tableWidget.item(i, j).text())
+        rows.insert(0, columns_headers)
+        return rows
 
     def excel_save(self):
         wb = openpyxl.Workbook()
         ws = wb.active
-        data = self.get_rows()
-        for list in data:
-            ws.append(list)
-        wb.save('C:/Users/Tekato/Documents/Ваша выборка.xlsx')
+        rows = self.get_rows()
+        filepath = os.environ['USERPROFILE'] + '\Desktop' + '\Ваша выборка статей.xlsx'
+        for row in rows:
+            ws.append(row)
+        wb.save(filepath)
 
 
 app = QApplication(sys.argv)
