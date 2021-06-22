@@ -9,6 +9,23 @@ import sys
 import os
 
 
+file = ''
+profi = []
+ranks = []
+wb = ws = row_count = column_count = None
+
+
+def loadallpapers():
+    global profi, ranks
+      # Загрузка файла и считывание его данных
+    # Считывание данных из таблицы в файле
+    for j in range(2, row_count + 1):
+        for i in range(1, column_count + 1):
+            profi.append([ws.cell(row=j, column=i).value])
+            ranks.append(0)
+    return profi, ranks
+
+
 def dict_sort(slovarik):  # Сортировка списка статей по центральности и создание списка отсортированных строк
     sorted_tuples = sorted(slovarik.items(), key=lambda item: (item[1]), reverse=True)
     sorted_dict = {k + 1: v for k, v in sorted_tuples}
@@ -60,29 +77,9 @@ def dict_sum(slovarik0, slovarik1):
     return final_slov
 
 
-def all_profiles():  # Загрузка всех статей
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)  # Загрузка файла и считывание его данных
-    ws = wb.active
-    row_count = ws.max_row
-    column_count = ws.max_column
-    data = []
-    ranks = []
-    # Считывание данных из таблицы в файле
-    for j in range(2, row_count + 1):
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j, column=i).value])
-            ranks.append(0)
-    return data, ranks
-
-
 def degree_sort():  # Сортировка статьи по центральности и добавление её в таблицу
     g = Graph.Read_Pajek("graph.net")
     rows = dict_sort(dict(enumerate(Graph.degree(g))))
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)  # Загрузка файла и считывание его данных
-    ws = wb.active
-    column_count = ws.max_column
     data = []
     # Считывание данных из таблицы в файлк
     for j in rows:
@@ -94,10 +91,6 @@ def degree_sort():  # Сортировка статьи по центральн�
 def closeness_sort():  # Сортировка статьи по центральности и добавление её в таблицу
     g = Graph.Read_Pajek("graph.net")
     rows = dict_sort(dict(enumerate(Graph.closeness(g))))
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)  # Загрузка файла и считывание его данных
-    ws = wb.active
-    column_count = ws.max_column
     data = []
     # Считывание данных из таблицы в файлк
     for j in rows:
@@ -109,10 +102,6 @@ def closeness_sort():  # Сортировка статьи по централь
 def betweenness_sort():  # Сортировка статьи по центральности и добавление её в таблицу
     g = Graph.Read_Pajek("graph.net")
     rows = dict_sort(dict(enumerate(Graph.betweenness(g))))
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)  # Загрузка файла и считывание его данных
-    ws = wb.active
-    column_count = ws.max_column
     data = []
     # Считывание данных из таблицы в файлк
     for j in rows:
@@ -124,10 +113,6 @@ def betweenness_sort():  # Сортировка статьи по централ
 def authority_sort():  # Сортировка статьи по центральности и добавление её в таблицу
     g = Graph.Read_Pajek("graph.net")
     rows = dict_sort(dict(enumerate(Graph.authority_score(g))))
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)  # Загрузка файла и считывание его данных
-    ws = wb.active
-    column_count = ws.max_column
     data = []
     # Считывание данных из таблицы в файлк
     for j in rows:
@@ -139,10 +124,6 @@ def authority_sort():  # Сортировка статьи по централь
 def hub_sort():  # Сортировка статьи по центральности и добавление её в таблицу
     g = Graph.Read_Pajek("graph.net")
     rows = dict_sort(dict(enumerate(Graph.hub_score(g))))
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)  # Загрузка файла и считывание его данных
-    ws = wb.active
-    column_count = ws.max_column
     data = []
     # Считывание данных из таблицы в файлк
     for j in rows:
@@ -153,10 +134,6 @@ def hub_sort():  # Сортировка статьи по центральнос
 
 def referativ():
     g = Graph.Read_Pajek("graph.net")
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)
-    ws = wb.active
-    column_count = ws.max_column
     data = []
     degree = range_sort(dict(enumerate(Graph.degree(g, mode='out'))))
     closeness = range_sort(dict(enumerate(Graph.closeness(g, mode='out'))))
@@ -173,10 +150,6 @@ def referativ():
 
 def priznan():
     g = Graph.Read_Pajek("graph.net")
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)
-    ws = wb.active
-    column_count = ws.max_column
     data = []
     degree = range_sort(dict(enumerate(Graph.degree(g, mode='in'))))
     closeness = range_sort(dict(enumerate(Graph.closeness(g, mode='in'))))
@@ -193,10 +166,6 @@ def priznan():
 
 def vesomost():
     g = Graph.Read_Pajek("graph.net")
-    wb = load_workbook(filename='Перечень статей.xlsx',
-                       data_only=True)
-    ws = wb.active
-    column_count = ws.max_column
     data = []
     degree = range_sort(dict(enumerate(Graph.degree(g))))
     closeness = range_sort(dict(enumerate(Graph.closeness(g))))
@@ -219,30 +188,32 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.comboBox.addItem('Все статьи')  # Добавление названий профилей в выдвигающийся список
-        #  self.ui.comboBox.addItem('По степени связанности')
-        #  self.ui.comboBox.addItem('По близости')
-        #  self.ui.comboBox.addItem('По посредничеству')
-        #  self.ui.comboBox.addItem('По авторитетности')
-        #  self.ui.comboBox.addItem('По концентрации')
-        self.ui.comboBox.addItem('Реферативность')
-        self.ui.comboBox.addItem('Признанность')
-        self.ui.comboBox.addItem('Весомость')
+        self.ui.comboBox.addItem('Исходящий')
+        self.ui.comboBox.addItem('Входящий')
+        self.ui.comboBox.addItem('Входящий/Исходящий')
         self.ui.comboBox_2.addItem('Ключевое слово')
         self.ui.comboBox_2.addItem('Название')
         self.ui.comboBox_2.addItem('Автор')
         self.ui.comboBox_2.addItem('УДК')
         self.ui.lineEdit.setPlaceholderText("Поиск по ключевым словам...")
         self.ui.pushButton.clicked.connect(self.search)
-        self.ui.pushButton_3.clicked.connect(self.renew)  # Фильтрация таблицы по профилю
+        self.ui.comboBox.currentTextChanged.connect(self.renew)  # Фильтрация таблицы по профилю
         self.ui.action_excel.triggered.connect(self.excel_save)
-        mylist, ranks = all_profiles()
-        self.printer(mylist, ranks)
+        self.ui.action_2.triggered.connect(self.getfilepath)
 
-    def printer(self, mylist, ranks):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
-        wb = load_workbook(filename='Перечень статей.xlsx', data_only=True)  # Загрузка файла и считывание его данных
+    def getfilepath(self):
+        global file, profi, ranks
+        global wb, ws, row_count, column_count
+        file = QtWidgets.QFileDialog.getOpenFileName()[0]
+        wb = load_workbook(filename=file,
+                           data_only=True)
         ws = wb.active
         row_count = ws.max_row
         column_count = ws.max_column
+        profi, ranks = loadallpapers()
+        self.printer(profi, ranks)
+
+    def printer(self, mylist, ranks):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
         column_names =['№ строки', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
              'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
         self.ui.tableWidget.setColumnCount(column_count)  # Задача кол-ва столбцов и строк
@@ -314,8 +285,8 @@ class MyWindow(QtWidgets.QMainWindow):
     def renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox.currentText())
         if checker == 'Все статьи':
-            mylist, ranks = all_profiles()
-            self.printer(mylist, ranks)
+            global ranks
+            self.printer(profi, ranks)
         if checker == 'По степени связанности':
             self.printer(degree_sort())
         if checker == 'По близости':
@@ -326,13 +297,13 @@ class MyWindow(QtWidgets.QMainWindow):
             self.printer(authority_sort())
         if checker == 'По концентрации':
             self.printer(hub_sort())
-        if checker == 'Весомость':
+        if checker == 'Входящий/Исходящий':
             mylist, ranks = vesomost()
             self.printer(mylist, ranks)
-        if checker == 'Реферативность':
+        if checker == 'Исходящий':
             mylist, ranks = referativ()
             self.printer(mylist, ranks)
-        if checker == 'Признанность':
+        if checker == 'Входящий':
             mylist, ranks = priznan()
             self.printer(mylist, ranks)
 
@@ -372,6 +343,7 @@ class MyWindow(QtWidgets.QMainWindow):
             filename = filename.replace('\\', '')
         QMessageBox.about(self, 'Где мой файл?', 'Ваш файл на рабочем столе\n'
                           + 'Имя файла: ' + filename)
+
 
 
 app = QApplication(sys.argv)
