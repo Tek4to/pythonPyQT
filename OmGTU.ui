@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1501</width>
-    <height>770</height>
+    <width>1502</width>
+    <height>786</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -143,13 +143,52 @@
      <string>Список профилей</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="next_button">
+    <property name="geometry">
+     <rect>
+      <x>1160</x>
+      <y>710</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Следующие</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="previous_button">
+    <property name="geometry">
+     <rect>
+      <x>1064</x>
+      <y>710</y>
+      <width>81</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Предыдущие</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="all_articles">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>710</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Все статьи</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1501</width>
+     <width>1502</width>
      <height>21</height>
     </rect>
    </property>
@@ -158,10 +197,17 @@
      <string>Меню</string>
     </property>
     <addaction name="separator"/>
-    <addaction name="action_2"/>
     <addaction name="action_excel"/>
    </widget>
+   <widget class="QMenu" name="load_menu">
+    <property name="title">
+     <string>Загрузка файлов</string>
+    </property>
+    <addaction name="articles_load"/>
+    <addaction name="network_load"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="load_menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_excel">
@@ -172,6 +218,16 @@
   <action name="action_2">
    <property name="text">
     <string>Открыть файл</string>
+   </property>
+  </action>
+  <action name="articles_load">
+   <property name="text">
+    <string>Загрузить выборку статей</string>
+   </property>
+  </action>
+  <action name="network_load">
+   <property name="text">
+    <string>Загрузить файл сети</string>
    </property>
   </action>
  </widget>
