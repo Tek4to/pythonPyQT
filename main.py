@@ -141,7 +141,6 @@ def hub_sort():  # Сортировка статьи по центральнос
 
 def referativ():
     graph = Graph.Read_Pajek(graph_file)
-    data = []
     degree = range_sort(dict(enumerate(Graph.degree(graph, mode='out'))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph, mode='out'))))
     hub = range_sort(dict(enumerate(Graph.hub_score(graph))))
@@ -149,26 +148,12 @@ def referativ():
     sorted_profiles = profile_range_sort(profiles)  # Ключ - номер статьи, значение - ранг
     rows = list(sorted_profiles.keys())
     ref_ranks = list(sorted_profiles.values())
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j + 1, column=i).value])
+    data = [[] for _ in range(len(rows) - 1)]
+    i = 0
+    for keys in rows:
+        data[i] = articles[keys-1]
+        i += 1
     return data, ref_ranks
-
-
-def referativ2():
-    g = Graph.Read_Pajek(graph_file)
-    data = []
-    degree = range_sort(dict(enumerate(Graph.degree(g, mode='out'))))
-    closeness = range_sort(dict(enumerate(Graph.closeness(g, mode='out'))))
-    hub = range_sort(dict(enumerate(Graph.hub_score(g))))
-    profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), hub))
-    sorted_profiles = profile_range_sort(profiles)  # Ключ - номер статьи, значение - ранг
-    rows = list(sorted_profiles.keys())
-    ranks = list(sorted_profiles.values())
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j + 1, column=i).value])
-    return data, ranks
 
 
 def priznan():
@@ -211,6 +196,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         # Добавление названий профилей в выдвигающийся список
+        self.ui.comboBox.addItem('Все статьи')
         self.ui.comboBox.addItem('Исходящий')
         self.ui.comboBox.addItem('Входящий')
         self.ui.comboBox.addItem('Входящий/Исходящий')
