@@ -1,6 +1,6 @@
 import openpyxl
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QApplication, QTableWidgetItem, QMessageBox
+from PyQt5.QtWidgets import QApplication, QTableWidgetItem, QMessageBox, QVBoxLayout, QWidget, QPushButton
 from OmGTU import Ui_MainWindow
 from openpyxl import load_workbook
 from igraph import *
@@ -10,7 +10,8 @@ import os
 
 file = ''
 graph_file = ''
-articles = []
+all_articles = []
+crt_articles = []
 ranks = []
 wb = ws = row_count = column_count = None
 dict_start = 0
@@ -23,15 +24,15 @@ def get_graph_path():
 
 
 def load_all_papers():
-    global articles, ranks
-    articles = [[] for _ in range(row_count-1)]
+    global all_articles, ranks
+    all_articles = [[] for _ in range(row_count - 1)]
     cntr = 0
     for j in range(2, row_count + 1):
         for i in range(1, column_count + 1):
-            articles[cntr].append(ws.cell(row=j, column=i).value)
+            all_articles[cntr].append(ws.cell(row=j, column=i).value)
             ranks.append(0)
         cntr += 1
-    return articles, ranks
+    return all_articles, ranks
 
 
 def dict_sort(dict):  # Сортировка списка статей по центральности и создание списка отсортированных строк
@@ -140,6 +141,7 @@ def hub_sort():  # Сортировка статьи по центральнос
 
 
 def referativ():
+    global crt_articles, ranks
     graph = Graph.Read_Pajek(graph_file)
     degree = range_sort(dict(enumerate(Graph.degree(graph, mode='out'))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph, mode='out'))))
@@ -147,34 +149,32 @@ def referativ():
     profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), hub))
     sorted_profiles = profile_range_sort(profiles)  # Ключ - номер статьи, значение - ранг
     rows = list(sorted_profiles.keys())
-    ref_ranks = list(sorted_profiles.values())
-    data = [[] for _ in range(len(rows) - 1)]
-    i = 0
-    for keys in rows:
-        data[i] = articles[keys-1]
-        i += 1
-    return data, ref_ranks
+    ranks = list(sorted_profiles.values())
+    crt_articles = [[] for _ in range(len(rows))]
+    for i in range(len(rows)):
+        crt_articles[i] = all_articles[rows[i] - 1]
+    return crt_articles, ranks
 
 
 def priznan():
+    global crt_articles, ranks
     graph = Graph.Read_Pajek(graph_file)
-    data = []
     degree = range_sort(dict(enumerate(Graph.degree(graph, mode='in'))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph, mode='in'))))
     authority = range_sort(dict(enumerate(Graph.authority_score(graph))))
     profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), authority))
     sorted_profiles = profile_range_sort(profiles)
     rows = list(sorted_profiles.keys())
-    priz_ranks = list(sorted_profiles.values())
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j + 1, column=i).value])
-    return data, priz_ranks
+    ranks = list(sorted_profiles.values())
+    crt_articles = [[] for _ in range(len(rows))]
+    for i in range(len(rows)):
+        crt_articles[i] = all_articles[rows[i] - 1]
+    return crt_articles, ranks
 
 
 def vesomost():
+    global crt_articles, ranks
     graph = Graph.Read_Pajek(graph_file)
-    data = []
     degree = range_sort(dict(enumerate(Graph.degree(graph))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph))))
     betweenness = range_sort(dict(enumerate(Graph.betweenness(graph))))
@@ -183,11 +183,11 @@ def vesomost():
     profiles = profile_dict_sort(dict_sum(dict_sum(dict_sum(dict_sum(degree, closeness), betweenness), authority), hub))
     sorted_profiles = profile_range_sort(profiles)
     rows = list(sorted_profiles.keys())
-    ves_ranks = list(sorted_profiles.values())
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j+1, column=i).value])
-    return data, ves_ranks
+    ranks = list(sorted_profiles.values())
+    crt_articles = [[] for _ in range(len(rows))]
+    for i in range(len(rows)):
+        crt_articles[i] = all_articles[rows[i] - 1]
+    return crt_articles, ranks
 
 
 class MyWindow(QtWidgets.QMainWindow):
@@ -195,16 +195,23 @@ class MyWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        self.dialog = Dialog()
+        self.dialog.resize(200, 200)
+
         # Добавление названий профилей в выдвигающийся список
         self.ui.comboBox.addItem('Все статьи')
         self.ui.comboBox.addItem('Исходящий')
         self.ui.comboBox.addItem('Входящий')
         self.ui.comboBox.addItem('Входящий/Исходящий')
+
         self.ui.comboBox_2.addItem('Ключевое слово')
         self.ui.comboBox_2.addItem('Название')
         self.ui.comboBox_2.addItem('Автор')
         self.ui.comboBox_2.addItem('УДК')
+
         self.ui.lineEdit.setPlaceholderText("Поиск по ключевым словам...")
+
         self.ui.pushButton.clicked.connect(self.search)
         self.ui.comboBox.currentTextChanged.connect(self.renew)  # Фильтрация таблицы по профилю
         self.ui.action_excel.triggered.connect(self.excel_save)
@@ -213,15 +220,19 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.next_button.clicked.connect(self.get_next)
         self.ui.previous_button.clicked.connect(self.get_previous)
         self.ui.all_articles.clicked.connect(self.load_all_articles)
+        self.ui.pushButton_2.clicked.connect(self.show_dialog)
+
+    def show_dialog(self):
+        self.dialog.show()
 
     def load_all_articles(self):
         global dict_start, dict_end
         dict_start = 0
         dict_end = 500
-        self.printer(articles, ranks)
+        self.printer(all_articles, ranks)
 
     def get_filepath(self):
-        global file, articles, ranks
+        global file, all_articles, ranks
         global wb, ws, row_count, column_count
         file = QtWidgets.QFileDialog.getOpenFileName()[0]
         wb = load_workbook(filename=file,
@@ -229,8 +240,8 @@ class MyWindow(QtWidgets.QMainWindow):
         ws = wb.active
         row_count = ws.max_row
         column_count = ws.max_column
-        articles, ranks = load_all_papers()
-        self.printer(articles, ranks)
+        all_articles, ranks = load_all_papers()
+        self.printer(all_articles, ranks)
 
     def get_previous(self):
         global dict_start, dict_end
@@ -239,16 +250,16 @@ class MyWindow(QtWidgets.QMainWindow):
         dict_start -= 500
         if dict_start < 0:
             dict_start = 0
-        self.printer(articles, ranks)
+        self.printer(crt_articles, ranks)
 
     def get_next(self):
         global dict_start, dict_end
         self.ui.tableWidget.clear()
         dict_start = dict_end
         dict_end += 500
-        if dict_end > len(articles):
-            dict_end = len(articles)
-        self.printer(articles, ranks)
+        if dict_end > len(crt_articles):
+            dict_end = len(crt_articles)
+        self.printer(crt_articles, ranks)
 
     def printer(self, mylist, ranks):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
         column_names =['№ строки', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
@@ -274,7 +285,7 @@ class MyWindow(QtWidgets.QMainWindow):
             row += 1
 
     def search(self):
-        data = []
+        global crt_articles
         row = 0
         col = 0
         rows_count = 0
@@ -285,9 +296,9 @@ class MyWindow(QtWidgets.QMainWindow):
             if item and item.column() == self.search_renew():
                     i = item.row()
                     for j in range(0, 11):
-                        data.append(self.ui.tableWidget.item(i, j).text())
+                        crt_articles.append(self.ui.tableWidget.item(i, j).text())
                     rows_count += 1  # запомнить количество найденных строк, для их вывода
-        if data:
+        if crt_articles:
             #  Очистка таблицы и вывод только искомых данных
             self.ui.tableWidget.clear()
             self.ui.tableWidget.setColumnCount(11)  # Задача кол-ва столбцов и строк
@@ -295,7 +306,7 @@ class MyWindow(QtWidgets.QMainWindow):
                  'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
             self.ui.tableWidget.setHorizontalHeaderLabels(columns_headers)
             self.ui.tableWidget.setRowCount(rows_count)
-            for item in data:
+            for item in crt_articles:
                 self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
                 self.ui.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
                 col += 1
@@ -322,8 +333,8 @@ class MyWindow(QtWidgets.QMainWindow):
     def renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox.currentText())
         if checker == 'Все статьи':
-            global ranks
-            self.printer(articles, ranks)
+            global crt_articles, ranks
+            self.printer(all_articles, ranks)
         if checker == 'По степени связанности':
             self.printer(degree_sort())
         if checker == 'По близости':
@@ -335,14 +346,14 @@ class MyWindow(QtWidgets.QMainWindow):
         if checker == 'По концентрации':
             self.printer(hub_sort())
         if checker == 'Входящий/Исходящий':
-            mylist, ranks = vesomost()
-            self.printer(mylist, ranks)
+            mylist, rank_list = vesomost()
+            self.printer(mylist, rank_list)
         if checker == 'Исходящий':
-            mylist, ranks = referativ()
-            self.printer(mylist, ranks)
+            mylist, rank_list = referativ()
+            self.printer(mylist, rank_list)
         if checker == 'Входящий':
-            mylist, ranks = priznan()
-            self.printer(mylist, ranks)
+            mylist, rank_list = priznan()
+            self.printer(mylist, rank_list)
 
     def get_rows(self):
         columns_headers = ['№ строки', 'Ранг', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
@@ -379,6 +390,11 @@ class MyWindow(QtWidgets.QMainWindow):
             filename = filename.replace('\\', '')
         QMessageBox.about(self, 'Где мой файл?', 'Ваш файл на рабочем столе\n'
                           + 'Имя файла: ' + filename)
+
+
+class Dialog(QtWidgets.QDialog):
+    def __init__(self):
+        super().__init__()
 
 
 app = QApplication(sys.argv)
