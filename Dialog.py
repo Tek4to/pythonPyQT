@@ -50,10 +50,10 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        Dialog.setWindowTitle(_translate("Dialog", "Источники"))
         self.pushButton.setText(_translate("Dialog", "Следующие"))
         self.pushButton_2.setText(_translate("Dialog", "Предыдущие"))
         self.pushButton_3.setText(_translate("Dialog", "Загрузить"))
         self.pushButton_4.setText(_translate("Dialog", "Сохранить"))
         self.pushButton_5.setText(_translate("Dialog", "Поиск"))
-        self.pushButton_6.setText(_translate("Dialog", "Все журналы"))
+        self.pushButton_6.setText(_translate("Dialog", "Все источники"))

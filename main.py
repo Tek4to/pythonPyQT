@@ -5,7 +5,7 @@ import sys
 import os
 
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QApplication, QTableWidgetItem, QMessageBox, QDialog, QWidget
+from PyQt5.QtWidgets import QApplication, QTableWidgetItem, QMessageBox, QWidget
 from OmGTU import Ui_MainWindow
 from Dialog import Ui_Dialog
 
@@ -25,22 +25,22 @@ def get_graph_path():
 
 
 def load_all_papers():
-    global all_articles, ranks
+    global all_articles, ranks, crt_articles
     all_articles = [[] for _ in range(row_count - 1)]
-    cntr = 0
+    counter = 0
     for j in range(2, row_count + 1):
         for i in range(1, column_count + 1):
-            all_articles[cntr].append(ws.cell(row=j, column=i).value)
+            all_articles[counter].append(ws.cell(row=j, column=i).value)
             ranks.append(0)
-        cntr += 1
-    return all_articles, ranks
+        counter += 1
+    crt_articles = all_articles
+    return crt_articles, ranks
 
 
 def dict_sort(dict):  # Сортировка списка статей по центральности и создание списка отсортированных строк
     sorted_tuples = sorted(dict.items(), key=lambda item: (item[1]), reverse=True)
     sorted_dict = {k + 1: v for k, v in sorted_tuples}
-    rows = list(sorted_dict.keys())
-    return rows
+    return list(sorted_dict.keys())
 
 
 def range_sort(dict):
@@ -200,10 +200,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.dialog = Dialog()
 
         # Добавление названий профилей в выдвигающийся список
-        self.ui.comboBox.addItem('Все статьи')
-        self.ui.comboBox.addItem('Исходящий')
-        self.ui.comboBox.addItem('Входящий')
-        self.ui.comboBox.addItem('Входящий/Исходящий')
+        profiles = ['Все статьи', 'Исходящий', 'Входящий', 'Входящий/Исходящий']
+        self.ui.comboBox.addItems(profiles)
 
         self.ui.comboBox_2.addItem('Ключевое слово')
         self.ui.comboBox_2.addItem('Название')
@@ -226,13 +224,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.dialog.show()
 
     def load_all_articles(self):
-        global dict_start, dict_end
-        dict_start = 0
-        dict_end = 500
-        self.printer(all_articles, ranks)
+        global crt_articles
+        crt_articles = all_articles
+        self.printer(crt_articles, ranks)
 
     def get_filepath(self):
-        global file, all_articles, ranks
+        global file, crt_articles, ranks
         global wb, ws, row_count, column_count
         file = QtWidgets.QFileDialog.getOpenFileName()[0]
         wb = load_workbook(filename=file,
@@ -240,8 +237,8 @@ class MyWindow(QtWidgets.QMainWindow):
         ws = wb.active
         row_count = ws.max_row
         column_count = ws.max_column
-        all_articles, ranks = load_all_papers()
-        self.printer(all_articles, ranks)
+        crt_articles, ranks = load_all_papers()
+        self.printer(crt_articles, ranks)
 
     def get_previous(self):
         global dict_start, dict_end
@@ -393,52 +390,11 @@ class MyWindow(QtWidgets.QMainWindow):
 
 
 class Dialog(QWidget):
-    crt_journals = jranks = None
-
     def __init__(self):
         super().__init__()
         self.di = Ui_Dialog()
         self.di.setupUi(self)
-        self.get_filepath()
-
-    def load_all_journals(self):
-        global crt_journals, jranks
-        crt_journals = [[] for _ in range(row_count - 1)]
-        cntr = 0
-        for j in range(2, row_count + 1):
-            for i in range(1, column_count + 1):
-                crt_journals[cntr].append(ws.cell(row=j, column=i).value)
-                ranks.append(0)
-            cntr += 1
-        return crt_journals, ranks
-
-    def get_filepath(self):
-        global file, all_articles, ranks
-        global wb, ws, row_count, column_count
-        file = QtWidgets.QFileDialog.getOpenFileName()[0]
-        wb = load_workbook(filename='C:/Users/ods75/Desktop/Перечень статей (эксперимент).xlsx',
-                           data_only=True)
-        ws = wb.active
-        row_count = ws.max_row
-        column_count = ws.max_column
-        crt_journals, ranks = self.load_all_journals()
-        self.printer(crt_journals, ranks)
-
-    def printer(self, mylist: list, ranks):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
-        column_names = ['№ строки', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
-                        'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
-        self.di.tableWidget.setColumnCount(column_count)  # Задача кол-ва столбцов и строк
-        self.di.tableWidget.setHorizontalHeaderLabels(column_names)
-        self.di.tableWidget.setRowCount(dict_end - dict_start)
-        row = 0
-        col = 0
-        col_position = 1
-        # Заполнение таблицы в приложении
-        for i in range(dict_start, dict_end):
-            for item in mylist[i]:
-                self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
-                self.di.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
-                col += 1
+        #  отображение таблицы источников
 
 
 if __name__ == '__main__':

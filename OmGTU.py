@@ -112,7 +112,7 @@ class Ui_MainWindow(object):
         self.next_button.setText(_translate("MainWindow", "Следующие"))
         self.previous_button.setText(_translate("MainWindow", "Предыдущие"))
         self.all_articles.setText(_translate("MainWindow", "Все статьи"))
-        self.pushButton_2.setText(_translate("MainWindow", "Журналы"))
+        self.pushButton_2.setText(_translate("MainWindow", "Источники"))
         self.menu.setTitle(_translate("MainWindow", "Меню"))
         self.load_menu.setTitle(_translate("MainWindow", "Загрузка файлов"))
         self.action_excel.setText(_translate("MainWindow", "Сохранить в excel"))
