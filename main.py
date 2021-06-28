@@ -1,12 +1,13 @@
 import openpyxl
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QApplication, QTableWidgetItem, QMessageBox, QVBoxLayout, QWidget, QPushButton
-from OmGTU import Ui_MainWindow
 from openpyxl import load_workbook
 from igraph import *
 import sys
 import os
 
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWidgets import QApplication, QTableWidgetItem, QMessageBox, QDialog, QWidget
+from OmGTU import Ui_MainWindow
+from Dialog import Ui_Dialog
 
 file = ''
 graph_file = ''
@@ -92,7 +93,7 @@ def degree_sort():  # Сортировка статьи по центральн�
     # Считывание данных из таблицы в файлк
     for j in rows:
         for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j+1, column=i).value])
+            data.append([ws.cell(row=j + 1, column=i).value])
     return data
 
 
@@ -103,7 +104,7 @@ def closeness_sort():  # Сортировка статьи по централь
     # Считывание данных из таблицы в файлк
     for j in rows:
         for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j+1, column=i).value])
+            data.append([ws.cell(row=j + 1, column=i).value])
     return data
 
 
@@ -114,7 +115,7 @@ def betweenness_sort():  # Сортировка статьи по централ
     # Считывание данных из таблицы в файлк
     for j in rows:
         for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j+1, column=i).value])
+            data.append([ws.cell(row=j + 1, column=i).value])
     return data
 
 
@@ -125,7 +126,7 @@ def authority_sort():  # Сортировка статьи по централь
     # Считывание данных из таблицы в файлк
     for j in rows:
         for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j+1, column=i).value])
+            data.append([ws.cell(row=j + 1, column=i).value])
     return data
 
 
@@ -136,7 +137,7 @@ def hub_sort():  # Сортировка статьи по центральнос
     # Считывание данных из таблицы в файлк
     for j in rows:
         for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j+1, column=i).value])
+            data.append([ws.cell(row=j + 1, column=i).value])
     return data
 
 
@@ -197,7 +198,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         self.dialog = Dialog()
-        self.dialog.resize(200, 200)
 
         # Добавление названий профилей в выдвигающийся список
         self.ui.comboBox.addItem('Все статьи')
@@ -261,9 +261,9 @@ class MyWindow(QtWidgets.QMainWindow):
             dict_end = len(crt_articles)
         self.printer(crt_articles, ranks)
 
-    def printer(self, mylist, ranks):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
-        column_names =['№ строки', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
-             'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
+    def printer(self, mylist: list, ranks):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
+        column_names = ['№ строки', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
+                        'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
         self.ui.tableWidget.setColumnCount(column_count)  # Задача кол-ва столбцов и строк
         self.ui.tableWidget.setHorizontalHeaderLabels(column_names)
         self.ui.tableWidget.setRowCount(dict_end - dict_start)
@@ -294,16 +294,16 @@ class MyWindow(QtWidgets.QMainWindow):
         #  Добавление их в список
         for item in items:
             if item and item.column() == self.search_renew():
-                    i = item.row()
-                    for j in range(0, 11):
-                        crt_articles.append(self.ui.tableWidget.item(i, j).text())
-                    rows_count += 1  # запомнить количество найденных строк, для их вывода
+                i = item.row()
+                for j in range(0, 11):
+                    crt_articles.append(self.ui.tableWidget.item(i, j).text())
+                rows_count += 1  # запомнить количество найденных строк, для их вывода
         if crt_articles:
             #  Очистка таблицы и вывод только искомых данных
             self.ui.tableWidget.clear()
             self.ui.tableWidget.setColumnCount(11)  # Задача кол-ва столбцов и строк
             columns_headers = ['№ строки', 'Ранг', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
-                 'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
+                               'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
             self.ui.tableWidget.setHorizontalHeaderLabels(columns_headers)
             self.ui.tableWidget.setRowCount(rows_count)
             for item in crt_articles:
@@ -392,12 +392,57 @@ class MyWindow(QtWidgets.QMainWindow):
                           + 'Имя файла: ' + filename)
 
 
-class Dialog(QtWidgets.QDialog):
+class Dialog(QWidget):
+    crt_journals = jranks = None
+
     def __init__(self):
         super().__init__()
+        self.di = Ui_Dialog()
+        self.di.setupUi(self)
+        self.get_filepath()
+
+    def load_all_journals(self):
+        global crt_journals, jranks
+        crt_journals = [[] for _ in range(row_count - 1)]
+        cntr = 0
+        for j in range(2, row_count + 1):
+            for i in range(1, column_count + 1):
+                crt_journals[cntr].append(ws.cell(row=j, column=i).value)
+                ranks.append(0)
+            cntr += 1
+        return crt_journals, ranks
+
+    def get_filepath(self):
+        global file, all_articles, ranks
+        global wb, ws, row_count, column_count
+        file = QtWidgets.QFileDialog.getOpenFileName()[0]
+        wb = load_workbook(filename='C:/Users/ods75/Desktop/Перечень статей (эксперимент).xlsx',
+                           data_only=True)
+        ws = wb.active
+        row_count = ws.max_row
+        column_count = ws.max_column
+        crt_journals, ranks = self.load_all_journals()
+        self.printer(crt_journals, ranks)
+
+    def printer(self, mylist: list, ranks):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
+        column_names = ['№ строки', 'Название', 'Авторы', 'УДК', 'Ключевые слова',
+                        'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
+        self.di.tableWidget.setColumnCount(column_count)  # Задача кол-ва столбцов и строк
+        self.di.tableWidget.setHorizontalHeaderLabels(column_names)
+        self.di.tableWidget.setRowCount(dict_end - dict_start)
+        row = 0
+        col = 0
+        col_position = 1
+        # Заполнение таблицы в приложении
+        for i in range(dict_start, dict_end):
+            for item in mylist[i]:
+                self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+                self.di.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
+                col += 1
 
 
-app = QApplication(sys.argv)
-application = MyWindow()
-application.show()
-sys.exit(app.exec())
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    application = MyWindow()
+    application.show()
+    sys.exit(app.exec())
