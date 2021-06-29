@@ -25,7 +25,7 @@ def get_graph_path():
 
 
 def load_all_papers():
-    global all_articles, ranks, crt_articles
+    global all_articles, ranks
     all_articles = [[] for _ in range(row_count - 1)]
     counter = 0
     for j in range(2, row_count + 1):
@@ -33,8 +33,7 @@ def load_all_papers():
             all_articles[counter].append(ws.cell(row=j, column=i).value)
             ranks.append(0)
         counter += 1
-    crt_articles = all_articles
-    return crt_articles, ranks
+    return all_articles, ranks
 
 
 def dict_sort(dict):  # Сортировка списка статей по центральности и создание списка отсортированных строк
@@ -203,10 +202,8 @@ class MyWindow(QtWidgets.QMainWindow):
         profiles = ['Все статьи', 'Исходящий', 'Входящий', 'Входящий/Исходящий']
         self.ui.comboBox.addItems(profiles)
 
-        self.ui.comboBox_2.addItem('Ключевое слово')
-        self.ui.comboBox_2.addItem('Название')
-        self.ui.comboBox_2.addItem('Автор')
-        self.ui.comboBox_2.addItem('УДК')
+        search_filter = ['Ключевое слово', 'Название', 'Автор', 'УДК']
+        self.ui.comboBox_2.addItems(search_filter)
 
         self.ui.lineEdit.setPlaceholderText("Поиск по ключевым словам...")
 
@@ -282,7 +279,7 @@ class MyWindow(QtWidgets.QMainWindow):
             row += 1
 
     def search(self):
-        global crt_articles
+        search_result = []
         row = 0
         col = 0
         rows_count = 0
@@ -293,9 +290,9 @@ class MyWindow(QtWidgets.QMainWindow):
             if item and item.column() == self.search_renew():
                 i = item.row()
                 for j in range(0, 11):
-                    crt_articles.append(self.ui.tableWidget.item(i, j).text())
+                    search_result.append(self.ui.tableWidget.item(i, j).text())
                 rows_count += 1  # запомнить количество найденных строк, для их вывода
-        if crt_articles:
+        if search_result:
             #  Очистка таблицы и вывод только искомых данных
             self.ui.tableWidget.clear()
             self.ui.tableWidget.setColumnCount(11)  # Задача кол-ва столбцов и строк
@@ -303,7 +300,7 @@ class MyWindow(QtWidgets.QMainWindow):
                                'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
             self.ui.tableWidget.setHorizontalHeaderLabels(columns_headers)
             self.ui.tableWidget.setRowCount(rows_count)
-            for item in crt_articles:
+            for item in search_result:
                 self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
                 self.ui.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
                 col += 1
