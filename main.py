@@ -14,6 +14,7 @@ graph_file = ''
 all_articles = []
 crt_articles = []
 ranks = []
+ves_ranks = dict
 wb = ws = row_count = column_count = None
 dict_start = 0
 dict_end = 500
@@ -173,7 +174,7 @@ def priznan():
 
 
 def vesomost():
-    global crt_articles, ranks
+    global crt_articles, ranks, ves_ranks
     graph = Graph.Read_Pajek(graph_file)
     degree = range_sort(dict(enumerate(Graph.degree(graph))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph))))
@@ -181,7 +182,7 @@ def vesomost():
     authority = range_sort(dict(enumerate(Graph.authority_score(graph))))
     hub = range_sort(dict(enumerate(Graph.hub_score(graph))))
     profiles = profile_dict_sort(dict_sum(dict_sum(dict_sum(dict_sum(degree, closeness), betweenness), authority), hub))
-    sorted_profiles = profile_range_sort(profiles)
+    ves_ranks = sorted_profiles = profile_range_sort(profiles)
     rows = list(sorted_profiles.keys())
     ranks = list(sorted_profiles.values())
     crt_articles = [[] for _ in range(len(rows))]
@@ -199,7 +200,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.dialog = Dialog()
 
         # Добавление названий профилей в выдвигающийся список
-        profiles = ['Все статьи', 'Исходящий', 'Входящий', 'Входящий/Исходящий']
+        profiles = ['Без профиля', 'Исходящий', 'Входящий', 'Входящий/Исходящий']
         self.ui.comboBox.addItems(profiles)
 
         search_filter = ['Ключевое слово', 'Название', 'Автор', 'УДК']
@@ -218,11 +219,10 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_2.clicked.connect(self.show_dialog)
 
     def show_dialog(self):
+        self.get_sources()
         self.dialog.show()
 
     def load_all_articles(self):
-        global crt_articles
-        crt_articles = all_articles
         self.printer(crt_articles, ranks)
 
     def get_filepath(self):
@@ -326,8 +326,9 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox.currentText())
-        if checker == 'Все статьи':
-            global crt_articles, ranks
+        if checker == 'Без профиля':
+            global crt_articles
+            crt_articles = all_articles
             self.printer(all_articles, ranks)
         if checker == 'По степени связанности':
             self.printer(degree_sort())
@@ -385,13 +386,18 @@ class MyWindow(QtWidgets.QMainWindow):
         QMessageBox.about(self, 'Где мой файл?', 'Ваш файл на рабочем столе\n'
                           + 'Имя файла: ' + filename)
 
+    def get_sources(self):
+        sourses = dict
+        for key in ves_ranks.keys():
+            print(ws.cell(row=int(key), column=7).value)
+
 
 class Dialog(QWidget):
     def __init__(self):
         super().__init__()
         self.di = Ui_Dialog()
         self.di.setupUi(self)
-        #  отображение таблицы источников
+           #  отображение таблицы источников
 
 
 if __name__ == '__main__':
