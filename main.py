@@ -387,9 +387,17 @@ class MyWindow(QtWidgets.QMainWindow):
                           + 'Имя файла: ' + filename)
 
     def get_sources(self):
-        sourses = dict
-        for key in ves_ranks.keys():
-            print(ws.cell(row=int(key), column=7).value)
+        sources = {}
+        vesomost()
+        cnt = 1
+        for i in range(2, row_count + 1):
+            if str(ws.cell(row=i, column=6).value) not in sources:
+                sources[str(ws.cell(row=i, column=6).value)] = [cnt, ves_ranks.get(int(ws.cell(row=i, column=1).value))]
+                print(int(ws.cell(row=i, column=1).value))
+            else:
+                (sources[str(ws.cell(row=i, column=6).value)])[0] += 1
+                (sources[str(ws.cell(row=i, column=6).value)])[1] += ves_ranks.get(int(ws.cell(row=i, column=1).value))
+        print(sources)
 
 
 class Dialog(QWidget):
