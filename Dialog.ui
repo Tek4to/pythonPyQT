@@ -65,7 +65,7 @@
   <widget class="QLineEdit" name="lineEdit">
    <property name="geometry">
     <rect>
-     <x>265</x>
+     <x>240</x>
      <y>10</y>
      <width>330</width>
      <height>31</height>
@@ -75,7 +75,7 @@
   <widget class="QPushButton" name="pushButton_5">
    <property name="geometry">
     <rect>
-     <x>630</x>
+     <x>600</x>
      <y>10</y>
      <width>75</width>
      <height>31</height>
@@ -95,7 +95,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Все источники</string>
+    <string>Назад</string>
    </property>
   </widget>
  </widget>

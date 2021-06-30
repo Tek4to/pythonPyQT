@@ -17,8 +17,10 @@ ranked_sources = []
 ranks = []
 ves_ranks = dict
 wb = ws = row_count = column_count = None
-dict_start = 0
-dict_end = 500
+art_dict_start = 0
+art_dict_end = 500
+src_dict_start = 0
+src_dict_end = 20
 
 
 def get_graph_path():
@@ -239,21 +241,21 @@ class MyWindow(QtWidgets.QMainWindow):
         self.printer(crt_articles, ranks)
 
     def get_previous(self):
-        global dict_start, dict_end
+        global art_dict_start, art_dict_end
         self.ui.tableWidget.clear()
-        dict_end = dict_start
-        dict_start -= 500
-        if dict_start < 0:
-            dict_start = 0
+        art_dict_end = art_dict_start
+        art_dict_start -= 500
+        if art_dict_start < 0:
+            art_dict_start = 0
         self.printer(crt_articles, ranks)
 
     def get_next(self):
-        global dict_start, dict_end
+        global art_dict_start, art_dict_end
         self.ui.tableWidget.clear()
-        dict_start = dict_end
-        dict_end += 500
-        if dict_end > len(crt_articles):
-            dict_end = len(crt_articles)
+        art_dict_start = art_dict_end
+        art_dict_end += 500
+        if art_dict_end > len(crt_articles):
+            art_dict_end = len(crt_articles)
         self.printer(crt_articles, ranks)
 
     def printer(self, mylist: list, ranks):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
@@ -261,12 +263,12 @@ class MyWindow(QtWidgets.QMainWindow):
                         'Издание', 'Том, выпуск, № издания', 'Год', 'Страницы', 'Ссылка']
         self.ui.tableWidget.setColumnCount(column_count)  # Задача кол-ва столбцов и строк
         self.ui.tableWidget.setHorizontalHeaderLabels(column_names)
-        self.ui.tableWidget.setRowCount(dict_end - dict_start)
+        self.ui.tableWidget.setRowCount(art_dict_end - art_dict_start)
         row = 0
         col = 0
         col_position = 1
         # Заполнение таблицы в приложении
-        for i in range(dict_start, dict_end):
+        for i in range(art_dict_start, art_dict_end):
             for item in mylist[i]:
                 self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
                 self.ui.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
@@ -274,7 +276,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.tableWidget.insertColumn(col_position)
         column_names.insert(1, 'Ранг')
         self.ui.tableWidget.setHorizontalHeaderLabels(column_names)
-        for j in range(dict_start, dict_end):
+        for j in range(art_dict_start, art_dict_end):
             self.ui.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
             self.ui.tableWidget.setItem(row, col_position, QTableWidgetItem(str(ranks[j])))
             row += 1
@@ -413,6 +415,14 @@ class Dialog(QWidget):
         super().__init__()
         self.di = Ui_Dialog()
         self.di.setupUi(self)
+        self.di.pushButton_5.clicked.connect(self.search)
+        self.di.pushButton_6.clicked.connect(self.show_all_sources)
+        self.di.pushButton.clicked.connect(self.get_next)
+        self.di.pushButton_2.clicked.connect(self.get_previous)
+        self.di.pushButton_4.clicked.connect(self.src_excel_save)
+
+    def show_all_sources(self):
+        self.printer(ranked_sources)
 
     def printer(self, mylist: list):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
         column_names = ['Наименование издания', 'Кол-во статей', 'Ранг издания']
@@ -420,16 +430,101 @@ class Dialog(QWidget):
         self.di.tableWidget.setHorizontalHeaderLabels(column_names)
         self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         self.di.tableWidget.setColumnWidth(0, 500)
-        self.di.tableWidget.setRowCount(len(mylist))
+        self.di.tableWidget.setRowCount(src_dict_end - src_dict_start)
         row = 0
         col = 0
         # Заполнение таблицы в приложении
-        for lists in mylist:
-            for item in lists:
+        for i in range(src_dict_start, src_dict_end):
+            for item in mylist[i]:
                 self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
                 self.di.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
                 col += 1
 
+    def search(self):
+        search_result = []
+        row = 0
+        col = 0
+        rows_count = 0
+        text = self.di.lineEdit.text()  # Считывание текста введённого пользователем
+        items = self.di.tableWidget.findItems(text, QtCore.Qt.MatchContains)  # Поиск совпадений
+        #  Добавление их в список
+        for item in items:
+            if item and item.column() == 0:
+                i = item.row()
+                for j in range(0, 3):
+                    search_result.append(self.di.tableWidget.item(i, j).text())
+                rows_count += 1  # запомнить количество найденных строк, для их вывода
+        if search_result:
+            #  Очистка таблицы и вывод только искомых данных
+            self.di.tableWidget.clear()
+            self.di.tableWidget.setColumnCount(3)  # Задача кол-ва столбцов и строк
+            columns_headers = ['Наименование издания', 'Кол-во статей', 'Ранг издания']
+            self.di.tableWidget.setHorizontalHeaderLabels(columns_headers)
+            self.di.tableWidget.setRowCount(rows_count)
+            for item in search_result:
+                self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+                self.di.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
+                col += 1
+        else:
+            self.di.tableWidget.clear()
+            self.di.tableWidget.setColumnCount(3)  # Задача кол-ва столбцов и строк
+            self.di.tableWidget.setHorizontalHeaderLabels(
+                ('Ничего', 'Не', 'Найдено')
+            )
+            self.di.tableWidget.setRowCount(0)
+
+    def get_previous(self):
+        global src_dict_start, src_dict_end
+        self.di.tableWidget.clear()
+        src_dict_end = src_dict_start
+        src_dict_start -= 20
+        if src_dict_start < 0:
+            src_dict_start = 0
+        self.printer(ranked_sources)
+
+    def get_next(self):
+        global src_dict_start, src_dict_end
+        self.di.tableWidget.clear()
+        src_dict_start = src_dict_end
+        src_dict_end += 20
+        if src_dict_end > len(crt_articles):
+            src_dict_end = len(crt_articles)
+        self.printer(ranked_sources)
+
+    def get_src_rows(self):
+        columns_headers = ['Наименование издания', 'Кол-во статей', 'Ранг издания']
+        rows_cnt = self.di.tableWidget.rowCount()
+        colums_cnt = self.di.tableWidget.columnCount()
+        rows = [[] for _ in range(rows_cnt)]
+        for i in range(rows_cnt):
+            for j in range(colums_cnt):
+                rows[i].append(self.di.tableWidget.item(i, j).text())
+        rows.insert(0, columns_headers)
+        return rows
+
+    def src_excel_save(self):
+        counter = 0
+        srcswb = openpyxl.Workbook()
+        srcsws = srcswb.active
+        ext = 'xlsx'
+        filename = '\Ваша выборка источников'
+        basename = os.environ['USERPROFILE'] + '\Desktop' + filename
+        actualname = "%s.%s" % (basename, ext)
+        srcsws.title = 'Выбранные источники'
+        rows = self.get_src_rows()
+        check_file = os.path.exists(actualname)
+        for row in rows:
+            srcsws.append(row)
+        if check_file:
+            counter += 1
+            actualname = "%s (%d).%s" % (basename, counter, ext)
+            srcswb.save(actualname)
+            filename = filename.replace('\\', '') + ' (' + str(counter) + ').' + ext
+        else:
+            srcswb.save(actualname)
+            filename = filename.replace('\\', '')
+        QMessageBox.about(self, 'Где мой файл?', 'Ваш файл на рабочем столе\n'
+                          + 'Имя файла: ' + filename)
 
 
 if __name__ == '__main__':
