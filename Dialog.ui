@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1050</width>
+    <width>860</width>
     <height>700</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <rect>
      <x>50</x>
      <y>60</y>
-     <width>921</width>
+     <width>761</width>
      <height>571</height>
     </rect>
    </property>
@@ -26,7 +26,7 @@
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>890</x>
+     <x>730</x>
      <y>640</y>
      <width>81</width>
      <height>31</height>
@@ -39,7 +39,7 @@
   <widget class="QPushButton" name="pushButton_2">
    <property name="geometry">
     <rect>
-     <x>790</x>
+     <x>620</x>
      <y>640</y>
      <width>81</width>
      <height>31</height>
@@ -49,26 +49,13 @@
     <string>Предыдущие</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_3">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>75</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Загрузить</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="pushButton_4">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>0</y>
+     <x>50</x>
+     <y>10</y>
      <width>75</width>
-     <height>25</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -78,9 +65,9 @@
   <widget class="QLineEdit" name="lineEdit">
    <property name="geometry">
     <rect>
-     <x>230</x>
-     <y>15</y>
-     <width>471</width>
+     <x>265</x>
+     <y>10</y>
+     <width>330</width>
      <height>31</height>
     </rect>
    </property>
@@ -88,24 +75,14 @@
   <widget class="QPushButton" name="pushButton_5">
    <property name="geometry">
     <rect>
-     <x>895</x>
-     <y>15</y>
+     <x>630</x>
+     <y>10</y>
      <width>75</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
     <string>Поиск</string>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="comboBox">
-   <property name="geometry">
-    <rect>
-     <x>730</x>
-     <y>15</y>
-     <width>140</width>
-     <height>31</height>
-    </rect>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton_6">

@@ -13,6 +13,7 @@ file = ''
 graph_file = ''
 all_articles = []
 crt_articles = []
+ranked_sources = []
 ranks = []
 ves_ranks = dict
 wb = ws = row_count = column_count = None
@@ -388,16 +389,23 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def get_sources(self):
         sources = {}
+        global ranked_sources
+        ranked_sources = [[] for _ in range(row_count + 1)]
         vesomost()
-        cnt = 1
+        cnt2 = 0
         for i in range(2, row_count + 1):
             if str(ws.cell(row=i, column=6).value) not in sources:
-                sources[str(ws.cell(row=i, column=6).value)] = [cnt, ves_ranks.get(int(ws.cell(row=i, column=1).value))]
-                print(int(ws.cell(row=i, column=1).value))
-            else:
+                sources[str(ws.cell(row=i, column=6).value)] = [1, ves_ranks.get(int(ws.cell(row=i, column=1).value))]
+            elif str(ws.cell(row=i, column=6).value) in sources:
                 (sources[str(ws.cell(row=i, column=6).value)])[0] += 1
                 (sources[str(ws.cell(row=i, column=6).value)])[1] += ves_ranks.get(int(ws.cell(row=i, column=1).value))
-        print(sources)
+        for key in sources.keys():
+            ranked_sources[cnt2].append(str(key))
+            for i in range(0, 2):
+                ranked_sources[cnt2].append(str((sources[key])[i]))
+            cnt2 += 1
+        ranked_sources = [item for item in ranked_sources if item]
+        self.dialog.printer(ranked_sources)
 
 
 class Dialog(QWidget):
@@ -405,7 +413,23 @@ class Dialog(QWidget):
         super().__init__()
         self.di = Ui_Dialog()
         self.di.setupUi(self)
-           #  отображение таблицы источников
+
+    def printer(self, mylist: list):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
+        column_names = ['Наименование издания', 'Кол-во статей', 'Ранг издания']
+        self.di.tableWidget.setColumnCount(3)  # Задача кол-ва столбцов и строк
+        self.di.tableWidget.setHorizontalHeaderLabels(column_names)
+        self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+        self.di.tableWidget.setColumnWidth(0, 500)
+        self.di.tableWidget.setRowCount(len(mylist))
+        row = 0
+        col = 0
+        # Заполнение таблицы в приложении
+        for lists in mylist:
+            for item in lists:
+                self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+                self.di.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
+                col += 1
+
 
 
 if __name__ == '__main__':
