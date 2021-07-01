@@ -17,6 +17,7 @@ ranked_sources = []
 ranks = []
 ves_ranks = dict
 wb = ws = row_count = column_count = None
+deg = deg_in = deg_out = auth = betw = huby = clos = clos_in = clos_out = False
 art_dict_start = 0
 art_dict_end = 500
 src_dict_start = 0
@@ -38,12 +39,6 @@ def load_all_papers():
             ranks.append(0)
         counter += 1
     return all_articles, ranks
-
-
-def dict_sort(dict):  # Сортировка списка статей по центральности и создание списка отсортированных строк
-    sorted_tuples = sorted(dict.items(), key=lambda item: (item[1]), reverse=True)
-    sorted_dict = {k + 1: v for k, v in sorted_tuples}
-    return list(sorted_dict.keys())
 
 
 def range_sort(dict):
@@ -87,61 +82,6 @@ def dict_sum(dict0, dict1):
     for k, v in dict1.items():
         sum_dict[k] = sum_dict.get(k, 0) + v
     return sum_dict
-
-
-def degree_sort():  # Сортировка статьи по центральности и добавление её в таблицу
-    g = Graph.Read_Pajek(graph_file)
-    rows = dict_sort(dict(enumerate(Graph.degree(g))))
-    data = []
-    # Считывание данных из таблицы в файлк
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j + 1, column=i).value])
-    return data
-
-
-def closeness_sort():  # Сортировка статьи по центральности и добавление её в таблицу
-    g = Graph.Read_Pajek(graph_file)
-    rows = dict_sort(dict(enumerate(Graph.closeness(g))))
-    data = []
-    # Считывание данных из таблицы в файлк
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j + 1, column=i).value])
-    return data
-
-
-def betweenness_sort():  # Сортировка статьи по центральности и добавление её в таблицу
-    g = Graph.Read_Pajek(graph_file)
-    rows = dict_sort(dict(enumerate(Graph.betweenness(g))))
-    data = []
-    # Считывание данных из таблицы в файлк
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j + 1, column=i).value])
-    return data
-
-
-def authority_sort():  # Сортировка статьи по центральности и добавление её в таблицу
-    graph = Graph.Read_Pajek(graph_file)
-    rows = dict_sort(dict(enumerate(Graph.authority_score(graph))))
-    data = []
-    # Считывание данных из таблицы в файлк
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j + 1, column=i).value])
-    return data
-
-
-def hub_sort():  # Сортировка статьи по центральности и добавление её в таблицу
-    graph = Graph.Read_Pajek(graph_file)
-    rows = dict_sort(dict(enumerate(Graph.hub_score(graph))))
-    data = []
-    # Считывание данных из таблицы в файлк
-    for j in rows:
-        for i in range(1, column_count + 1):
-            data.append([ws.cell(row=j + 1, column=i).value])
-    return data
 
 
 def referativ():
@@ -194,6 +134,46 @@ def vesomost():
     return crt_articles, ranks
 
 
+def constructor():
+    graph = Graph.Read_Pajek(graph_file)
+    profile = {}
+    if huby:
+        hub_centr = range_sort(dict(enumerate(Graph.hub_score(graph))))
+        profile = dict_sum(profile, hub_centr)
+    if auth:
+        authority_centr = range_sort(dict(enumerate(Graph.authority_score(graph))))
+        profile = dict_sum(profile, authority_centr)
+    if betw:
+        betweenness_centr = range_sort(dict(enumerate(Graph.betweenness(graph))))
+        profile = dict_sum(profile, betweenness_centr)
+    if deg:
+        degree_centr = range_sort(dict(enumerate(Graph.degree(graph))))
+        profile = dict_sum(profile, degree_centr)
+    if deg_in:
+        degree_in_centr = range_sort(dict(enumerate(Graph.degree(graph, mode='in'))))
+        profile = dict_sum(profile, degree_in_centr)
+    if deg_out:
+        degree_out_centr = range_sort(dict(enumerate(Graph.degree(graph, mode='out'))))
+        profile = dict_sum(profile, degree_out_centr)
+    if clos:
+        closeness_centr = range_sort(dict(enumerate(Graph.closeness(graph))))
+        profile = dict_sum(profile, closeness_centr)
+    if clos_in:
+        closeness_in_centr = range_sort(dict(enumerate(Graph.closeness(graph, mode='in'))))
+        profile = dict_sum(profile, closeness_in_centr)
+    if clos_out:
+        closeness_out_centr = range_sort(dict(enumerate(Graph.closeness(graph, mode='out'))))
+        profile = dict_sum(profile, closeness_out_centr)
+    profiles = profile_dict_sort(profile)
+    sorted_profiles = profile_range_sort(profiles)
+    rows = list(sorted_profiles.keys())
+    ranki = list(sorted_profiles.values())
+    crt_src = [[] for _ in range(len(rows))]
+    for i in range(len(rows)):
+        crt_src[i] = all_articles[rows[i] - 1]
+    return crt_src, ranki
+
+
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -205,6 +185,7 @@ class MyWindow(QtWidgets.QMainWindow):
         # Добавление названий профилей в выдвигающийся список
         profiles = ['Без профиля', 'Исходящий', 'Входящий', 'Входящий/Исходящий']
         self.ui.comboBox.addItems(profiles)
+        self.ui.comboBox.addItem('Тест')
 
         search_filter = ['Ключевое слово', 'Название', 'Автор', 'УДК']
         self.ui.comboBox_2.addItems(search_filter)
@@ -220,6 +201,48 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.previous_button.clicked.connect(self.get_previous)
         self.ui.all_articles.clicked.connect(self.load_all_articles)
         self.ui.pushButton_2.clicked.connect(self.show_dialog)
+        self.ui.constr_pushButton.clicked.connect(self.check_centr)
+
+    def check_centr(self):
+        global deg, deg_in, deg_out, auth, betw, huby, clos, clos_in, clos_out
+        if self.ui.degree_checkBox.isChecked():
+            deg = True
+        else:
+            deg = False
+        if self.ui.deg_in_checkBox_7.isChecked():
+            deg_in = True
+        else:
+            deg_in = False
+        if self.ui.deg_out_checkBox_6.isChecked():
+            deg_out = True
+        else:
+            deg_out = False
+        if self.ui.auth_checkBox_3.isChecked():
+            auth = True
+        else:
+            auth = False
+        if self.ui.betw_checkBox_2.isChecked():
+            betw = True
+        else:
+            betw = False
+        if self.ui.hub_checkBox_4.isChecked():
+            huby = True
+        else:
+            huby = False
+        if self.ui.clos_checkBox_5.isChecked():
+            clos = True
+        else:
+            clos = False
+        if self.ui.clos_in_checkBox_9.isChecked():
+            clos_in = True
+        else:
+            clos_in = False
+        if self.ui.clos_out_checkBox_8.isChecked():
+            clos_out = True
+        else:
+            clos_out = False
+        mylist, ranks_list = constructor()
+        self.printer(mylist, ranks_list)
 
     def show_dialog(self):
         self.get_sources()
@@ -333,16 +356,6 @@ class MyWindow(QtWidgets.QMainWindow):
             global crt_articles
             crt_articles = all_articles
             self.printer(all_articles, ranks)
-        if checker == 'По степени связанности':
-            self.printer(degree_sort())
-        if checker == 'По близости':
-            self.printer(closeness_sort())
-        if checker == 'По посредничеству':
-            self.printer(betweenness_sort())
-        if checker == 'По авторитетности':
-            self.printer(authority_sort())
-        if checker == 'По концентрации':
-            self.printer(hub_sort())
         if checker == 'Входящий/Исходящий':
             mylist, rank_list = vesomost()
             self.printer(mylist, rank_list)
