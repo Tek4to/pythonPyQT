@@ -20,8 +20,8 @@
    <widget class="QComboBox" name="comboBox">
     <property name="geometry">
      <rect>
-      <x>1050</x>
-      <y>20</y>
+      <x>940</x>
+      <y>17</y>
       <width>181</width>
       <height>31</height>
      </rect>
@@ -133,8 +133,8 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>1100</x>
-      <y>3</y>
+      <x>990</x>
+      <y>0</y>
       <width>95</width>
       <height>13</height>
      </rect>
@@ -172,14 +172,14 @@
    <widget class="QPushButton" name="all_articles">
     <property name="geometry">
      <rect>
-      <x>940</x>
-      <y>710</y>
+      <x>1150</x>
+      <y>20</y>
       <width>75</width>
       <height>23</height>
      </rect>
     </property>
     <property name="text">
-     <string>Все статьи</string>
+     <string>Сброс</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_2">
@@ -252,7 +252,7 @@
     <property name="geometry">
      <rect>
       <x>1310</x>
-      <y>240</y>
+      <y>180</y>
       <width>101</width>
       <height>30</height>
      </rect>
@@ -266,7 +266,7 @@
     <property name="geometry">
      <rect>
       <x>1250</x>
-      <y>190</y>
+      <y>240</y>
       <width>91</width>
       <height>30</height>
      </rect>
@@ -293,7 +293,7 @@
     <property name="geometry">
      <rect>
       <x>1370</x>
-      <y>190</y>
+      <y>240</y>
       <width>80</width>
       <height>30</height>
      </rect>
@@ -307,7 +307,7 @@
     <property name="geometry">
      <rect>
       <x>1250</x>
-      <y>290</y>
+      <y>280</y>
       <width>101</width>
       <height>41</height>
      </rect>
@@ -321,8 +321,8 @@
    <widget class="QCheckBox" name="clos_in_checkBox_9">
     <property name="geometry">
      <rect>
-      <x>1380</x>
-      <y>290</y>
+      <x>1370</x>
+      <y>280</y>
       <width>101</width>
       <height>41</height>
      </rect>
@@ -337,13 +337,36 @@
     <property name="geometry">
      <rect>
       <x>1300</x>
-      <y>360</y>
+      <y>340</y>
       <width>120</width>
       <height>35</height>
      </rect>
     </property>
     <property name="text">
      <string>Применить</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="all_articles_2">
+    <property name="geometry">
+     <rect>
+      <x>960</x>
+      <y>710</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Все статьи</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboBox_3">
+    <property name="geometry">
+     <rect>
+      <x>856</x>
+      <y>710</y>
+      <width>69</width>
+      <height>23</height>
+     </rect>
     </property>
    </widget>
   </widget>

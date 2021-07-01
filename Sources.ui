@@ -62,14 +62,50 @@
   <widget class="QPushButton" name="pushButton_6">
    <property name="geometry">
     <rect>
-     <x>50</x>
+     <x>710</x>
+     <y>10</y>
+     <width>101</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Отобразить все</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="src_comboBox">
+   <property name="geometry">
+    <rect>
+     <x>530</x>
+     <y>640</y>
+     <width>71</width>
+     <height>31</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_7">
+   <property name="geometry">
+    <rect>
+     <x>630</x>
      <y>640</y>
      <width>81</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>Назад</string>
+    <string>Предыдущие</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_8">
+   <property name="geometry">
+    <rect>
+     <x>730</x>
+     <y>640</y>
+     <width>81</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Следующие</string>
    </property>
   </widget>
  </widget>

@@ -16,12 +16,14 @@ crt_articles = []
 ranked_sources = []
 ranks = []
 src_ranks = dict
+amount = 10
+src_amount = 10
 wb = ws = row_count = column_count = None
 deg = deg_in = deg_out = auth = betw = huby = clos = clos_in = clos_out = False
 art_dict_start = 0
-art_dict_end = 500
+art_dict_end = 10
 src_dict_start = 0
-src_dict_end = 20
+src_dict_end = 10
 
 
 def get_graph_path():
@@ -38,7 +40,6 @@ def load_all_papers():
             all_articles[counter].append(ws.cell(row=j, column=i).value)
             ranks.append(0)
         counter += 1
-    src_ranks = None
     return all_articles, ranks
 
 
@@ -86,7 +87,9 @@ def dict_sum(dict0, dict1):
 
 
 def referativ():
-    global crt_articles, ranks, src_ranks
+    global crt_articles, ranks, src_ranks, art_dict_start, art_dict_end
+    art_dict_start = 0
+    art_dict_end = amount
     graph = Graph.Read_Pajek(graph_file)
     degree = range_sort(dict(enumerate(Graph.degree(graph, mode='out'))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph, mode='out'))))
@@ -102,7 +105,9 @@ def referativ():
 
 
 def priznan():
-    global crt_articles, ranks, src_ranks
+    global crt_articles, ranks, src_ranks, art_dict_start, art_dict_end
+    art_dict_start = 0
+    art_dict_end = amount
     graph = Graph.Read_Pajek(graph_file)
     degree = range_sort(dict(enumerate(Graph.degree(graph, mode='in'))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph, mode='in'))))
@@ -118,7 +123,9 @@ def priznan():
 
 
 def vesomost():
-    global crt_articles, ranks, src_ranks
+    global crt_articles, ranks, src_ranks, art_dict_start, art_dict_end
+    art_dict_start = 0
+    art_dict_end = amount
     graph = Graph.Read_Pajek(graph_file)
     degree = range_sort(dict(enumerate(Graph.degree(graph))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph))))
@@ -137,7 +144,9 @@ def vesomost():
 
 def constructor():
     graph = Graph.Read_Pajek(graph_file)
-    global crt_articles, ranks, src_ranks
+    global crt_articles, ranks, sr, art_dict_start, art_dict_end, src_ranks
+    art_dict_start = 0
+    art_dict_end = amount
     profile = {}
     if huby:
         hub_centr = range_sort(dict(enumerate(Graph.hub_score(graph))))
@@ -191,10 +200,14 @@ class MyWindow(QtWidgets.QMainWindow):
         search_filter = ['Ключевое слово', 'Название', 'Автор', 'УДК']
         self.ui.comboBox_2.addItems(search_filter)
 
+        art_amount = ['10', '50', '100', '500']
+        self.ui.comboBox_3.addItems(art_amount)
+
         self.ui.lineEdit.setPlaceholderText("Поиск по ключевым словам...")
 
         self.ui.pushButton.clicked.connect(self.search)
         self.ui.comboBox.currentTextChanged.connect(self.renew)  # Фильтрация таблицы по профилю
+        self.ui.comboBox_3.currentTextChanged.connect(self.show_renew)
         self.ui.action_excel.triggered.connect(self.excel_save)
         self.ui.articles_load.triggered.connect(self.get_filepath)
         self.ui.network_load.triggered.connect(get_graph_path)
@@ -203,6 +216,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.all_articles.clicked.connect(self.load_all_articles)
         self.ui.pushButton_2.clicked.connect(self.show_dialog)
         self.ui.constr_pushButton.clicked.connect(self.check_centr)
+        self.ui.all_articles_2.clicked.connect(self.load_all_articles_2)
 
     def check_centr(self):
         global deg, deg_in, deg_out, auth, betw, huby, clos, clos_in, clos_out
@@ -250,7 +264,16 @@ class MyWindow(QtWidgets.QMainWindow):
         self.dialog.show()
 
     def load_all_articles(self):
-        self.printer(crt_articles, ranks)
+        global art_dict_start, art_dict_end
+        art_dict_start = 0
+        art_dict_end = amount
+        self.printer(all_articles, ranks)
+
+    def load_all_articles_2(self):
+        global art_dict_start, art_dict_end
+        art_dict_start = 0
+        art_dict_end = len(all_articles)
+        self.printer(all_articles, ranks)
 
     def get_filepath(self):
         global file, crt_articles, ranks
@@ -268,7 +291,7 @@ class MyWindow(QtWidgets.QMainWindow):
         global art_dict_start, art_dict_end
         self.ui.tableWidget.clear()
         art_dict_end = art_dict_start
-        art_dict_start -= 500
+        art_dict_start -= amount
         if art_dict_start < 0:
             art_dict_start = 0
         self.printer(crt_articles, ranks)
@@ -277,7 +300,7 @@ class MyWindow(QtWidgets.QMainWindow):
         global art_dict_start, art_dict_end
         self.ui.tableWidget.clear()
         art_dict_start = art_dict_end
-        art_dict_end += 500
+        art_dict_end += amount
         if art_dict_end > len(crt_articles):
             art_dict_end = len(crt_articles)
         self.printer(crt_articles, ranks)
@@ -351,6 +374,26 @@ class MyWindow(QtWidgets.QMainWindow):
             x = 2
         return x
 
+    def show_renew(self):  # Выбор сортировки
+        global art_dict_end, amount
+        checker = str(self.ui.comboBox_3.currentText())
+        if checker == '10':
+            art_dict_end = 10
+            amount = 10
+            self.printer(crt_articles, ranks)
+        elif checker == '50':
+            art_dict_end = 50
+            amount = 50
+            self.printer(crt_articles, ranks)
+        elif checker == '100':
+            art_dict_end = 100
+            amount = 100
+            self.printer(crt_articles, ranks)
+        elif checker == '500':
+            art_dict_end = 500
+            amount = 500
+            self.printer(crt_articles, ranks)
+
     def renew(self):  # Выбор сортировки
         checker = str(self.ui.comboBox.currentText())
         if checker == 'Без профиля':
@@ -380,6 +423,7 @@ class MyWindow(QtWidgets.QMainWindow):
         return rows
 
     def excel_save(self):
+
         counter = 0
         swb = openpyxl.Workbook()
         sws = swb.active
@@ -404,23 +448,26 @@ class MyWindow(QtWidgets.QMainWindow):
                           + 'Имя файла: ' + filename)
 
     def get_sources(self):
-        sources = {}
-        global ranked_sources
-        ranked_sources = [[] for _ in range(row_count + 1)]
-        cnt2 = 0
-        for i in range(2, row_count + 1):
-            if str(ws.cell(row=i, column=6).value) not in sources:
-                sources[str(ws.cell(row=i, column=6).value)] = [1, src_ranks.get(int(ws.cell(row=i, column=1).value))]
-            elif str(ws.cell(row=i, column=6).value) in sources:
-                (sources[str(ws.cell(row=i, column=6).value)])[0] += 1
-                (sources[str(ws.cell(row=i, column=6).value)])[1] += src_ranks.get(int(ws.cell(row=i, column=1).value))
-        for key in sources.keys():
-            ranked_sources[cnt2].append(str(key))
-            for i in range(0, 2):
-                ranked_sources[cnt2].append(str((sources[key])[i]))
-            cnt2 += 1
-        ranked_sources = [item for item in ranked_sources if item]
-        self.dialog.printer(ranked_sources)
+        if self.ui.comboBox.currentText() == 'Без профиля':
+            QMessageBox.about(self, "Извините!", "Выберите профиль")
+        else:
+            sources = {}
+            global ranked_sources, src_dict_end
+            ranked_sources = [[] for _ in range(row_count + 1)]
+            cnt2 = 0
+            for i in range(2, row_count + 1):
+                if str(ws.cell(row=i, column=6).value) not in sources:
+                    sources[str(ws.cell(row=i, column=6).value)] = [1, src_ranks.get(int(ws.cell(row=i, column=1).value))]
+                elif str(ws.cell(row=i, column=6).value) in sources:
+                    (sources[str(ws.cell(row=i, column=6).value)])[0] += 1
+                    (sources[str(ws.cell(row=i, column=6).value)])[1] += src_ranks.get(int(ws.cell(row=i, column=1).value))
+            for key in sources.keys():
+                ranked_sources[cnt2].append(str(key))
+                for i in range(0, 2):
+                    ranked_sources[cnt2].append(str((sources[key])[i]))
+                cnt2 += 1
+            ranked_sources = [item for item in ranked_sources if item]
+            self.dialog.printer(ranked_sources)
 
 
 class Dialog(QWidget):
@@ -428,11 +475,23 @@ class Dialog(QWidget):
         super().__init__()
         self.di = Ui_Dialog()
         self.di.setupUi(self)
+
+        src_amount_list = ['10', '50', '100', '500']
+        self.di.src_comboBox.addItems(src_amount_list)
+
         self.di.pushButton_5.clicked.connect(self.search)
-        self.di.pushButton_6.clicked.connect(self.show_all_sources)
+        self.di.pushButton_6.clicked.connect(self.show_all_sources_2)
         self.di.pushButton_4.clicked.connect(self.src_excel_save)
+        self.di.pushButton_7.clicked.connect(self.get_previous)
+        self.di.pushButton_8.clicked.connect(self.get_next)
+        self.di.src_comboBox.currentTextChanged.connect(self.show_src_renew)
 
     def show_all_sources(self):
+        self.printer(ranked_sources)
+
+    def show_all_sources_2(self):
+        global src_dict_end
+        src_dict_end = len(ranked_sources)
         self.printer(ranked_sources)
 
     def printer(self, mylist: list):  # Вывод таблицы на экран, задача кол-ва строк и столбцов, их имён
@@ -441,11 +500,11 @@ class Dialog(QWidget):
         self.di.tableWidget.setHorizontalHeaderLabels(column_names)
         self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         self.di.tableWidget.setColumnWidth(0, 500)
-        self.di.tableWidget.setRowCount(len(mylist))
+        self.di.tableWidget.setRowCount(src_dict_end - src_dict_start)
         row = 0
         col = 0
         # Заполнение таблицы в приложении
-        for i in range(len(mylist)):
+        for i in range(src_dict_start, src_dict_end):
             for item in mylist[i]:
                 self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
                 self.di.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
@@ -488,7 +547,7 @@ class Dialog(QWidget):
         global src_dict_start, src_dict_end
         self.di.tableWidget.clear()
         src_dict_end = src_dict_start
-        src_dict_start -= 20
+        src_dict_start -= src_amount
         if src_dict_start < 0:
             src_dict_start = 0
         self.printer(ranked_sources)
@@ -497,10 +556,30 @@ class Dialog(QWidget):
         global src_dict_start, src_dict_end
         self.di.tableWidget.clear()
         src_dict_start = src_dict_end
-        src_dict_end += 20
-        if src_dict_end > len(crt_articles):
-            src_dict_end = len(crt_articles)
+        src_dict_end += src_amount
+        if src_dict_end > len(ranked_sources):
+            src_dict_end = len(ranked_sources)
         self.printer(ranked_sources)
+
+    def show_src_renew(self):  # Выбор сортировки
+        global src_dict_end, src_amount
+        checker = str(self.di.src_comboBox.currentText())
+        if checker == '10':
+            src_dict_end = 10
+            src_amount = 10
+            self.printer(ranked_sources)
+        if checker == '50':
+            src_dict_end = 50
+            src_amount = 50
+            self.printer(ranked_sources)
+        if checker == '100':
+            src_dict_end = 100
+            src_amount = 100
+            self.printer(ranked_sources)
+        if checker == '500':
+            src_dict_end = 500
+            src_amount = 500
+            self.printer(ranked_sources)
 
     def get_src_rows(self):
         columns_headers = ['Наименование издания', 'Кол-во статей', 'Ранг издания']
