@@ -6,8 +6,8 @@ import os
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QTableWidgetItem, QMessageBox, QWidget
-from OmGTU import Ui_MainWindow
-from Dialog import Ui_Dialog
+from GLIS import Ui_MainWindow
+from Sources import Ui_Dialog
 
 file = ''
 graph_file = ''
@@ -15,7 +15,7 @@ all_articles = []
 crt_articles = []
 ranked_sources = []
 ranks = []
-ves_ranks = dict
+src_ranks = dict
 wb = ws = row_count = column_count = None
 deg = deg_in = deg_out = auth = betw = huby = clos = clos_in = clos_out = False
 art_dict_start = 0
@@ -30,7 +30,7 @@ def get_graph_path():
 
 
 def load_all_papers():
-    global all_articles, ranks
+    global all_articles, ranks, src_ranks
     all_articles = [[] for _ in range(row_count - 1)]
     counter = 0
     for j in range(2, row_count + 1):
@@ -38,6 +38,7 @@ def load_all_papers():
             all_articles[counter].append(ws.cell(row=j, column=i).value)
             ranks.append(0)
         counter += 1
+    src_ranks = None
     return all_articles, ranks
 
 
@@ -85,13 +86,13 @@ def dict_sum(dict0, dict1):
 
 
 def referativ():
-    global crt_articles, ranks
+    global crt_articles, ranks, src_ranks
     graph = Graph.Read_Pajek(graph_file)
     degree = range_sort(dict(enumerate(Graph.degree(graph, mode='out'))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph, mode='out'))))
     hub = range_sort(dict(enumerate(Graph.hub_score(graph))))
     profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), hub))
-    sorted_profiles = profile_range_sort(profiles)  # Ключ - номер статьи, значение - ранг
+    src_ranks = sorted_profiles = profile_range_sort(profiles)  # Ключ - номер статьи, значение - ранг
     rows = list(sorted_profiles.keys())
     ranks = list(sorted_profiles.values())
     crt_articles = [[] for _ in range(len(rows))]
@@ -101,13 +102,13 @@ def referativ():
 
 
 def priznan():
-    global crt_articles, ranks
+    global crt_articles, ranks, src_ranks
     graph = Graph.Read_Pajek(graph_file)
     degree = range_sort(dict(enumerate(Graph.degree(graph, mode='in'))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph, mode='in'))))
     authority = range_sort(dict(enumerate(Graph.authority_score(graph))))
     profiles = profile_dict_sort(dict_sum(dict_sum(degree, closeness), authority))
-    sorted_profiles = profile_range_sort(profiles)
+    src_ranks = sorted_profiles = profile_range_sort(profiles)
     rows = list(sorted_profiles.keys())
     ranks = list(sorted_profiles.values())
     crt_articles = [[] for _ in range(len(rows))]
@@ -117,7 +118,7 @@ def priznan():
 
 
 def vesomost():
-    global crt_articles, ranks, ves_ranks
+    global crt_articles, ranks, src_ranks
     graph = Graph.Read_Pajek(graph_file)
     degree = range_sort(dict(enumerate(Graph.degree(graph))))
     closeness = range_sort(dict(enumerate(Graph.closeness(graph))))
@@ -125,7 +126,7 @@ def vesomost():
     authority = range_sort(dict(enumerate(Graph.authority_score(graph))))
     hub = range_sort(dict(enumerate(Graph.hub_score(graph))))
     profiles = profile_dict_sort(dict_sum(dict_sum(dict_sum(dict_sum(degree, closeness), betweenness), authority), hub))
-    ves_ranks = sorted_profiles = profile_range_sort(profiles)
+    src_ranks = sorted_profiles = profile_range_sort(profiles)
     rows = list(sorted_profiles.keys())
     ranks = list(sorted_profiles.values())
     crt_articles = [[] for _ in range(len(rows))]
@@ -136,6 +137,7 @@ def vesomost():
 
 def constructor():
     graph = Graph.Read_Pajek(graph_file)
+    global crt_articles, ranks, src_ranks
     profile = {}
     if huby:
         hub_centr = range_sort(dict(enumerate(Graph.hub_score(graph))))
@@ -165,13 +167,13 @@ def constructor():
         closeness_out_centr = range_sort(dict(enumerate(Graph.closeness(graph, mode='out'))))
         profile = dict_sum(profile, closeness_out_centr)
     profiles = profile_dict_sort(profile)
-    sorted_profiles = profile_range_sort(profiles)
+    src_ranks = sorted_profiles = profile_range_sort(profiles)
     rows = list(sorted_profiles.keys())
-    ranki = list(sorted_profiles.values())
-    crt_src = [[] for _ in range(len(rows))]
+    ranks = list(sorted_profiles.values())
+    crt_articles = [[] for _ in range(len(rows))]
     for i in range(len(rows)):
-        crt_src[i] = all_articles[rows[i] - 1]
-    return crt_src, ranki
+        crt_articles[i] = all_articles[rows[i] - 1]
+    return crt_articles, ranks
 
 
 class MyWindow(QtWidgets.QMainWindow):
@@ -185,7 +187,6 @@ class MyWindow(QtWidgets.QMainWindow):
         # Добавление названий профилей в выдвигающийся список
         profiles = ['Без профиля', 'Исходящий', 'Входящий', 'Входящий/Исходящий']
         self.ui.comboBox.addItems(profiles)
-        self.ui.comboBox.addItem('Тест')
 
         search_filter = ['Ключевое слово', 'Название', 'Автор', 'УДК']
         self.ui.comboBox_2.addItems(search_filter)
@@ -406,14 +407,13 @@ class MyWindow(QtWidgets.QMainWindow):
         sources = {}
         global ranked_sources
         ranked_sources = [[] for _ in range(row_count + 1)]
-        vesomost()
         cnt2 = 0
         for i in range(2, row_count + 1):
             if str(ws.cell(row=i, column=6).value) not in sources:
-                sources[str(ws.cell(row=i, column=6).value)] = [1, ves_ranks.get(int(ws.cell(row=i, column=1).value))]
+                sources[str(ws.cell(row=i, column=6).value)] = [1, src_ranks.get(int(ws.cell(row=i, column=1).value))]
             elif str(ws.cell(row=i, column=6).value) in sources:
                 (sources[str(ws.cell(row=i, column=6).value)])[0] += 1
-                (sources[str(ws.cell(row=i, column=6).value)])[1] += ves_ranks.get(int(ws.cell(row=i, column=1).value))
+                (sources[str(ws.cell(row=i, column=6).value)])[1] += src_ranks.get(int(ws.cell(row=i, column=1).value))
         for key in sources.keys():
             ranked_sources[cnt2].append(str(key))
             for i in range(0, 2):
@@ -430,8 +430,6 @@ class Dialog(QWidget):
         self.di.setupUi(self)
         self.di.pushButton_5.clicked.connect(self.search)
         self.di.pushButton_6.clicked.connect(self.show_all_sources)
-        self.di.pushButton.clicked.connect(self.get_next)
-        self.di.pushButton_2.clicked.connect(self.get_previous)
         self.di.pushButton_4.clicked.connect(self.src_excel_save)
 
     def show_all_sources(self):
@@ -443,11 +441,11 @@ class Dialog(QWidget):
         self.di.tableWidget.setHorizontalHeaderLabels(column_names)
         self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         self.di.tableWidget.setColumnWidth(0, 500)
-        self.di.tableWidget.setRowCount(src_dict_end - src_dict_start)
+        self.di.tableWidget.setRowCount(len(mylist))
         row = 0
         col = 0
         # Заполнение таблицы в приложении
-        for i in range(src_dict_start, src_dict_end):
+        for i in range(len(mylist)):
             for item in mylist[i]:
                 self.di.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
                 self.di.tableWidget.setItem(row, col, QTableWidgetItem(str(item)))
