@@ -483,6 +483,7 @@ class Dialog(QWidget):
         self.di.pushButton_6.clicked.connect(self.show_all_sources_2)
         self.di.pushButton_4.clicked.connect(self.src_excel_save)
         self.di.pushButton_7.clicked.connect(self.get_previous)
+
         self.di.pushButton_8.clicked.connect(self.get_next)
         self.di.src_comboBox.currentTextChanged.connect(self.show_src_renew)
 

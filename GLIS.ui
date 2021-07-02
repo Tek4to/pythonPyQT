@@ -351,12 +351,12 @@
      <rect>
       <x>960</x>
       <y>710</y>
-      <width>75</width>
+      <width>91</width>
       <height>23</height>
      </rect>
     </property>
     <property name="text">
-     <string>Все статьи</string>
+     <string>Все публикации</string>
     </property>
    </widget>
    <widget class="QComboBox" name="comboBox_3">
@@ -409,12 +409,12 @@
   </action>
   <action name="articles_load">
    <property name="text">
-    <string>Загрузить выборку статей</string>
+    <string>Загрузить выборку публикаций</string>
    </property>
   </action>
   <action name="network_load">
    <property name="text">
-    <string>Загрузить файл сети</string>
+    <string>Загрузить файл публикаций</string>
    </property>
   </action>
  </widget>
