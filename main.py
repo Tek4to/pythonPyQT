@@ -3,7 +3,6 @@ from openpyxl import load_workbook
 from igraph import *
 import sys
 import os
-
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QTableWidgetItem, QMessageBox, QWidget
 from GLIS import Ui_MainWindow

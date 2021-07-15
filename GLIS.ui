@@ -409,12 +409,12 @@
   </action>
   <action name="articles_load">
    <property name="text">
-    <string>Загрузить выборку публикаций</string>
+    <string>Загрузить перечень публикаций</string>
    </property>
   </action>
   <action name="network_load">
    <property name="text">
-    <string>Загрузить файл публикаций</string>
+    <string>Загрузить файл сети</string>
    </property>
   </action>
  </widget>
