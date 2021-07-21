@@ -1,12 +1,11 @@
 import openpyxl
-from openpyxl import load_workbook
-from igraph import *
-import sys
-import os
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QTableWidgetItem, QMessageBox, QWidget
+from igraph import *
+from openpyxl import load_workbook
 from GLIS import Ui_MainWindow
 from Sources import Ui_Dialog
+
 
 file = ''
 graph_file = ''
@@ -25,11 +24,6 @@ src_dict_start = 0
 src_dict_end = 10
 
 
-def get_graph_path():
-    global graph_file
-    graph_file = QtWidgets.QFileDialog.getOpenFileName()[0]
-
-
 def load_all_papers():
     global all_articles, ranks, src_ranks
     all_articles = [[] for _ in range(row_count - 1)]
@@ -40,6 +34,11 @@ def load_all_papers():
             ranks.append(0)
         counter += 1
     return all_articles, ranks
+
+
+def get_graph_path():
+    global graph_file
+    graph_file = QtWidgets.QFileDialog.getOpenFileName()[0]
 
 
 def range_sort(dict):
@@ -456,10 +455,12 @@ class MyWindow(QtWidgets.QMainWindow):
             cnt2 = 0
             for i in range(2, row_count + 1):
                 if str(ws.cell(row=i, column=6).value) not in sources:
-                    sources[str(ws.cell(row=i, column=6).value)] = [1, src_ranks.get(int(ws.cell(row=i, column=1).value))]
+                    sources[str(ws.cell(row=i, column=6).value)] = [1,
+                                                                    src_ranks.get(int(ws.cell(row=i, column=1).value))]
                 elif str(ws.cell(row=i, column=6).value) in sources:
                     (sources[str(ws.cell(row=i, column=6).value)])[0] += 1
-                    (sources[str(ws.cell(row=i, column=6).value)])[1] += src_ranks.get(int(ws.cell(row=i, column=1).value))
+                    (sources[str(ws.cell(row=i, column=6).value)])[1] += src_ranks.get(
+                        int(ws.cell(row=i, column=1).value))
             for key in sources.keys():
                 ranked_sources[cnt2].append(str(key))
                 for i in range(0, 2):
